@@ -5,7 +5,7 @@ pragma solidity ^0.8.0;
 /**
  * @title IBalanceFreezer interface
  * @author CloudWalk Inc.
- * @notice The interface of a token that supports freezing operations
+ * @notice The interface of the contract that responsible for freezing operations
  */
 interface IBalanceFreezer {
 
@@ -17,10 +17,10 @@ interface IBalanceFreezer {
      * @param oldFrozenBalance The previous frozen balance of the account
      * @param txId The transaction ID of the balance freeze
      */
-    event BalanceFrozen(address indexed account, uint256 newFrozenBalance, uint256 oldFrozenBalance, bytes32 indexed txId);
+    event FrozenBalanceChanged(address indexed account, uint256 newFrozenBalance, uint256 oldFrozenBalance, bytes32 indexed txId);
 
     /**
-     * @notice Emitted when frozen tokens have been transferred from an account
+     * @notice Emitted when frozen tokens have been transferred between accounts
      *
      * @param from The account from which frozen tokens have been transferred
      * @param to The account which frozen tokens have been transferred to
@@ -32,7 +32,7 @@ interface IBalanceFreezer {
     /**
      * @notice Increases the frozen balance for an account
      *
-     * Emits a {BalanceFrozen} event
+     * Emits a {FrozenBalanceChanged} event
      *
      * @param account The account to increase frozen balance for
      * @param amount The amount to increase the frozen balance by
@@ -43,7 +43,7 @@ interface IBalanceFreezer {
     /**
      * @notice Decreases the frozen balance for an account
      *
-     * Emits a {BalanceFrozen} event
+     * Emits a {FrozenBalanceChanged} event
      *
      * @param account The account to decrease frozen balance for
      * @param amount The amount to decrease the frozen balance by
@@ -62,4 +62,17 @@ interface IBalanceFreezer {
      * @param txId The transaction ID of the transfer
      */
     function transferFrozen(address from, address to, uint256 amount, bytes32 txId) external;
+
+    /**
+     * @notice Retrieves the frozen balance of an account
+     *
+     * @param account The account to check the balance of
+     * @return The amount of tokens that are frozen for the account
+     */
+    function balanceOfFrozen(address account) external view returns (uint256);
+
+    /**
+     * @dev Returns the address of the underlying token.
+     */
+    function underlyingToken(address account) external view returns (uint256);
 }

@@ -11,7 +11,7 @@ import {BalanceFreezerShardStorage} from "./BalanceFreezerShardStorage.sol";
 /**
  * @title BalanceFreezerShard contract
  * @author CloudWalk Inc. (See https://www.cloudwalk.io)
- * @dev The contract responsible for storing sharded transfer frozen operations.
+ * @dev The contract responsible for storing sharded operations.
  */
 contract BalanceFreezerShard is BalanceFreezerShardStorage, OwnableUpgradeable, UUPSUpgradeable, IBalanceFreezerShard {
     // ------------------ Errors ---------------------------------- //
@@ -68,44 +68,17 @@ contract BalanceFreezerShard is BalanceFreezerShardStorage, OwnableUpgradeable, 
     /**
      * @inheritdoc IBalanceFreezerShard
      */
-    function registerFrozenBalanceChange(
+    function registerOperation(
         bytes32 txId,
-        TransferStatus status
+        OperationStatus status
     ) external returns (Error err) {
-        if (txId == 0) {
-            return Error.ZeroTxId;
-        }
-
-        Operation storage operation = _changeFrozenOperations[txId];
+        Operation storage operation = _operations[txId];
 
         if (operation.status != OperationStatus.Nonexistent) {
-            return Error.ChangeAlreadyExecuted;
+            return Error.OperationAlreadyExecuted;
         }
 
         operation.status = status;
-        operation.txId = txId;
-
-        return Error.None;
-    }
-
-    /**
-     * @inheritdoc IBalanceFreezerShard
-     */
-    function registerFrozenBalanceTransfer(
-        bytes32 txId,
-        TransferStatus targetStatus
-    ) external onlyOwnerOrAdmin returns (Error) {
-        if (txId == 0) {
-            return Error.ZeroTxId;
-        }
-
-        Operation storage operation = _transferFrozenOperations[txId];
-
-        if (operation.status != OperationStatus.Nonexistent) {
-            return Error.TransferAlreadyExecuted;
-        }
-
-        operation.status = targetStatus;
         operation.txId = txId;
 
         return Error.None;

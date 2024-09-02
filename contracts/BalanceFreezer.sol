@@ -17,7 +17,7 @@ import {IERC20Freezable} from "./interfaces/IERC20Freezable.sol";
 /**
  * @title BalanceFreezer contract
  * @author CloudWalk Inc. (See https://www.cloudwalk.io)
- * @dev Entry point contract for BalanceFreezer operations.
+ * @dev Entry point contract freezing operations.
  */
 contract BalanceFreezer is
     BalanceFreezerStorage,
@@ -34,7 +34,7 @@ contract BalanceFreezer is
     /// @dev The role of this contract owner.
     bytes32 public constant OWNER_ROLE = keccak256("OWNER_ROLE");
 
-    /// @dev The role of freezer that is allowed to execute the transfer frozen operations.
+    /// @dev The role of freezer that is allowed to execute operations with frozen balance.
     bytes32 public constant FREEZER_ROLE = keccak256("FREEZER_ROLE");
 
     // ------------------ Errors ---------------------------------- //
@@ -45,11 +45,8 @@ contract BalanceFreezer is
     /// @dev Throws if the provided off-chain transaction identifier is zero.
     error ZeroTxId();
 
-    /// @dev Thrown if the change frozen balance operation with the provided txId is already executed.
-    error ChangeAlreadyExecuted();
-
-    /// @dev Thrown if the frozen balance transfer operation with the provided txId is already executed.
-    error TransferAlreadyExecuted();
+    /// @dev Thrown if the operation with the provided txId is already executed.
+    error AlreadyExecuted();
 
     /// @dev Throws if the shard contract returns an error.
     error ShardError(IBalanceFreezerShard.Error err);
@@ -130,14 +127,18 @@ contract BalanceFreezer is
      * @param amount The amount of tokens to freeze
      */
     function freeze(address account, uint256 amount, bytes32 txId) external whenNotPaused onlyRole(FREEZER_ROLE) {
-        IBalanceFreezerShard.Error err = _shard(txId).registerFrozenBalanceChange(txId, TransferStatus.Executed);
+        if (txId == 0) {
+            revert ZeroTxId();
+        }
+
+        IBalanceFreezerShard.Error err = _shard(txId).registerOperation(txId, OperationStatus.ChangeExecuted);
         _checkAndRevert(err);
 
-        uint256 oldBalance = IERC20Freezable(_token).balanceOfFrozen(account);
+        uint256 oldBalance = balanceOfFrozen(account);
 
         IERC20Freezable(_token).freeze(account, amount);
 
-        emit BalanceFrozen(account, amount, oldBalance, txId);
+        emit FrozenBalanceChanged(account, amount, oldBalance, txId);
     }
 
     /**
@@ -147,16 +148,21 @@ contract BalanceFreezer is
      * @dev Can only be called by a freezer
      * @dev The account address must not be zero
      * @dev The amount must not be zero
+     * @dev The transaction must not be executed
      */
     function freezeIncrease(address account, uint256 amount, bytes32 txId) external whenNotPaused onlyRole(FREEZER_ROLE) {
-        IBalanceFreezerShard.Error err = _shard(txId).registerFrozenBalanceChange(txId, TransferStatus.Executed);
+        if (txId == 0) {
+            revert ZeroTxId();
+        }
+
+        IBalanceFreezerShard.Error err = _shard(txId).registerOperation(txId, OperationStatus.ChangeExecuted);
         _checkAndRevert(err);
 
-        uint256 oldBalance = IERC20Freezable(_token).balanceOfFrozen(account);
+        uint256 oldBalance = balanceOfFrozen(account);
 
         IERC20Freezable(_token).freezeIncrease(account, amount);
 
-        emit BalanceFrozen(account, oldBalance + amount, oldBalance, txId);
+        emit FrozenBalanceChanged(account, oldBalance + amount, oldBalance, txId);
     }
 
     /**
@@ -166,17 +172,92 @@ contract BalanceFreezer is
      * @dev Can only be called by a freezer
      * @dev The account address must not be zero
      * @dev The amount must not be zero
+     * @dev The transaction must not be executed
      */
     function freezeDecrease(address account, uint256 amount, bytes32 txId) external whenNotPaused onlyRole(FREEZER_ROLE) {
-        IBalanceFreezerShard.Error err = _shard(txId).registerFrozenBalanceChange(txId, TransferStatus.Executed);
+        if (txId == 0) {
+            revert ZeroTxId();
+        }
+
+        IBalanceFreezerShard.Error err = _shard(txId).registerOperation(txId, OperationStatus.ChangeExecuted);
         _checkAndRevert(err);
 
-        uint256 oldBalance = IERC20Freezable(_token).balanceOfFrozen(account);
+        uint256 oldBalance = balanceOfFrozen(account);
 
         IERC20Freezable(_token).freezeDecrease(account, amount);
 
-        emit BalanceFrozen(account, oldBalance - amount, oldBalance, txId);
+        emit FrozenBalanceChanged(account, oldBalance - amount, oldBalance, txId);
     }
+
+    // ------------------ changeFrozen Version 1 BEGIN ---------------------------- //
+
+    enum ChangeOperationType {
+        Change,     // 0
+        Replace     // 1
+    }
+
+    error IncorrectAmount();
+
+    function changeFrozen(address account, uint64 amount, ChangeOperationType updateType, bytes32 txId) external whenNotPaused onlyRole(FREEZER_ROLE) {
+        if (txId == 0) {
+            revert ZeroTxId();
+        }
+
+        IBalanceFreezerShard.Error err = _shard(txId).registerOperation(txId, OperationStatus.ChangeExecuted);
+        _checkAndRevert(err);
+
+        uint256 oldBalance = balanceOfFrozen(account);
+
+        if (updateType == ChangeOperationType.Replace) {
+            if (amount < 0) {
+                revert IncorrectAmount();
+            }
+            IERC20Freezable(_token).freeze(account, uint256(amount));
+        } else {
+            if (amount > 0) {
+                IERC20Freezable(_token).freezeIncrease(account, uint256(amount));
+            } else {
+                IERC20Freezable(_token).freezeDecrease(account, uint256(-amount));
+            }
+        }
+
+        emit FrozenBalanceChanged(account, oldBalance + amount, oldBalance, txId);
+    }
+
+    // ------------------ changeFrozen Version 1 END ---------------------------- //
+
+    // ------------------ changeFrozen Version 2 BEGIN ---------------------------- //
+
+    enum ChangeOperationType2 {
+        Update,     // 0
+        Increase,   // 1
+        Decrease    // 2
+    }
+
+    function changeFrozen2(address account, uint256 amount, ChangeOperationType2 updateType, bytes32 txId) external whenNotPaused onlyRole(FREEZER_ROLE) {
+        if (txId == 0) {
+            revert ZeroTxId();
+        }
+
+        IBalanceFreezerShard.Error err = _shard(txId).registerOperation(txId, OperationStatus.ChangeExecuted);
+        _checkAndRevert(err);
+
+        uint256 oldBalance = balanceOfFrozen(account);
+
+        if (updateType == ChangeOperationType2.Update) {
+            IERC20Freezable(_token).freeze(account, amount);
+        } else if (updateType == ChangeOperationType2.Increase) {
+            IERC20Freezable(_token).freezeIncrease(account, amount);
+        } else {
+            IERC20Freezable(_token).freezeDecrease(account, amount);
+        }
+
+        uint256 newBalance = balanceOfFrozen(account);
+
+        emit FrozenBalanceChanged(account, newBalance, oldBalance, txId);
+    }
+
+    // ------------------ changeFrozen Version 2 END ---------------------------- //
 
     /**
      * @inheritdoc IERC20Freezable
@@ -184,24 +265,30 @@ contract BalanceFreezer is
      * @dev The contract must not be paused
      * @dev Can only be called by a freezer
      * @dev The frozen balance must be greater than the `amount`
+     * @dev The transaction must not be executed
      */
     function transferFrozen(address from, address to, uint256 amount, bytes32 txId) public virtual whenNotPaused onlyRole(FREEZER_ROLE) {
-        IBalanceFreezerShard.Error err = _shard(txId).registerFrozenBalanceTransfer(txId, TransferStatus.Executed);
+        if (txId == 0) {
+            revert ZeroTxId();
+        }
+
+        IBalanceFreezerShard.Error err = _shard(txId).registerOperation(txId, OperationStatus.TransferExecuted);
         _checkAndRevert(err);
 
+        uint256 oldBalance = balanceOfFrozen(from);
         IERC20Freezable(_token).transferFrozen(from, to, amount);
+        uint256 newBalance = balanceOfFrozen(from);
 
         emit FrozenBalanceTransfer(from, to, amount, txId);
+        emit FrozenBalanceChanged(from, newBalance, oldBalance, txId);
     }
 
     /**
-     * @dev Checks the freezing ability and execute it
+     * @dev Checks shard errors and reverts if necessary.
      */
     function _checkAndRevert(IBalanceFreezerShard.Error err) internal {
         if (err != IBalanceFreezerShard.Error.None) {
-            if (err == IBalanceFreezerShard.Error.ZeroTxId) revert ZeroTxId();
-            if (err == IBalanceFreezerShard.Error.ChangeAlreadyExecuted) revert ChangeAlreadyExecuted();
-            if (err == IBalanceFreezerShard.Error.TransferAlreadyExecuted) revert TransferAlreadyExecuted();
+            if (err == IBalanceFreezerShard.Error.OperationAlreadyExecuted) revert AlreadyExecuted();
             revert ShardError(err);
         }
     }
@@ -214,5 +301,19 @@ contract BalanceFreezer is
         uint256 i = uint256(keccak256(abi.encodePacked(txId)));
         i %= _shards.length;
         return _shards[i];
+    }
+
+    /**
+     * @inheritdoc IERC20Freezable
+     */
+    function balanceOfFrozen(address account) public view returns (uint256) {
+        return IERC20Freezable(_token).balanceOfFrozen(account);
+    }
+
+    /**
+     * @inheritdoc IPixCashierRoot
+     */
+    function underlyingToken(address account) external view returns (address) {
+        return _token;
     }
 }

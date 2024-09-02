@@ -16,8 +16,7 @@ interface IBalanceFreezerShard is IBalanceFreezerTypes{
     enum Error {
         None,
         ZeroTxId,
-        TransferAlreadyExecuted,
-        ChangeAlreadyExecuted
+        OperationAlreadyExecuted
     }
 
     /**
@@ -28,23 +27,12 @@ interface IBalanceFreezerShard is IBalanceFreezerTypes{
     function setAdmin(address account, bool status) external;
 
     /**
-     * @dev Registers a change frozen operations.
-     * @param txId The off-chain identifier of the change frozen operation.
-     * @param status The status of the change frozen operation.
+     * @dev Registers an operation.
+     * @param txId The off-chain identifier of the operation.
+     * @param status The status of the operation.
      * @return err The error code if the operation fails, otherwise None.
      */
-    function registerFrozenBalanceChange(
-        bytes32 txId,
-        OperationStatus status
-    ) external returns (Error err);
-
-    /**
-     * @dev Registers a transfer frozen operations.
-     * @param txId The off-chain identifier of the transfer frozen operation.
-     * @param status The status of the transfer frozen operation.
-     * @return err The error code if the operation fails, otherwise None.
-     */
-    function registerFrozenBalanceTransfer(
+    function registerOperation(
         bytes32 txId,
         OperationStatus status
     ) external returns (Error err);
