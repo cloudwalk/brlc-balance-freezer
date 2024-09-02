@@ -25,5 +25,5 @@ abstract contract BalanceFreezerStorage is IBalanceFreezerTypes{
      * @dev This empty reserved space is put in place to allow future versions to add new
      * variables without shifting down storage in the inheritance chain.
      */
-    uint256[46] private __gap;
+    uint256[47] private __gap;
 }

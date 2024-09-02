@@ -7,14 +7,17 @@ import {IBalanceFreezerTypes} from "./IBalanceFreezerTypes.sol";
 /**
  * @title BalanceFreezer shard interface
  * @author CloudWalk Inc. (See https://www.cloudwalk.io)
- * @dev The interface of the contract that responsible for storing sharded transfer frozen balance operations.
+ * @dev The interface of the contract that responsible for storing sharded frozen balance operations.
  */
 interface IBalanceFreezerShard is IBalanceFreezerTypes{
     /**
      * @dev Enumeration of the shard contract possible errors.
      */
     enum Error {
-        TransferAlreadyExecuted
+        None,
+        ZeroTxId,
+        TransferAlreadyExecuted,
+        ChangeAlreadyExecuted
     }
 
     /**
@@ -25,16 +28,25 @@ interface IBalanceFreezerShard is IBalanceFreezerTypes{
     function setAdmin(address account, bool status) external;
 
     /**
+     * @dev Registers a change frozen operations.
+     * @param txId The off-chain identifier of the change frozen operation.
+     * @param status The status of the change frozen operation.
+     * @return err The error code if the operation fails, otherwise None.
+     */
+    function registerFrozenBalanceChange(
+        bytes32 txId,
+        OperationStatus status
+    ) external returns (Error err);
+
+    /**
      * @dev Registers a transfer frozen operations.
-     * @param from The address of the sender account.
-     * @param amount The amount of the transfer frozen operation.
      * @param txId The off-chain identifier of the transfer frozen operation.
      * @param status The status of the transfer frozen operation.
      * @return err The error code if the operation fails, otherwise None.
      */
     function registerFrozenBalanceTransfer(
         bytes32 txId,
-        TransferStatus status
+        OperationStatus status
     ) external returns (Error err);
 
     /**

@@ -8,6 +8,37 @@ pragma solidity ^0.8.0;
  * @notice The interface of a token that supports freezing operations
  */
 interface IERC20Freezable {
+
+    /**
+     * @notice Updates the frozen balance for an account
+     *
+     * Emits a {Freeze} event
+     *
+     * @param account The account to increase frozen balance for
+     * @param amount The amount to increase the frozen balance by
+     */
+    function freeze(address account, uint256 amount) external;
+
+    /**
+     * @notice Increases the frozen balance for an account
+     *
+     * Emits a {Freeze} event
+     *
+     * @param account The account to increase frozen balance for
+     * @param amount The amount to increase the frozen balance by
+     */
+    function freezeIncrease(address account, uint256 amount) external;
+
+    /**
+     * @notice Decreases the frozen balance for an account
+     *
+     * Emits a {Freeze} event
+     *
+     * @param account The account to decrease frozen balance for
+     * @param amount The amount to decrease the frozen balance by
+     */
+    function freezeDecrease(address account, uint256 amount) external;
+
     /**
      * @notice Transfers frozen tokens on behalf of an account
      *

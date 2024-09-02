@@ -39,8 +39,20 @@ contract BalanceFreezer is
 
     // ------------------ Errors ---------------------------------- //
 
-    /// @notice The frozen balance is exceeded during the operation
-    error LackOfFrozenBalance();
+    /// @dev Throws if the provided token address is zero.
+    error ZeroTokenAddress();
+
+    /// @dev Throws if the provided off-chain transaction identifier is zero.
+    error ZeroTxId();
+
+    /// @dev Thrown if the change frozen balance operation with the provided txId is already executed.
+    error ChangeAlreadyExecuted();
+
+    /// @dev Thrown if the frozen balance transfer operation with the provided txId is already executed.
+    error TransferAlreadyExecuted();
+
+    /// @dev Throws if the shard contract returns an error.
+    error ShardError(IBalanceFreezerShard.Error err);
 
     // ------------------ Initializers ---------------------------- //
 
@@ -101,6 +113,72 @@ contract BalanceFreezer is
     // ------------------ Functions ------------------------------- //
 
     /**
+     * @dev [DEPRECATED] Freezes tokens of the specified account
+     *
+     * Emits a {Freeze} event
+     *
+     * IMPORTANT: This function is deprecated and will be removed in the future updates of the contract.
+     *            Use the {freezeIncrease} and {freezeDecrease} functions instead.
+     *
+     * Requirements:
+     *
+     * - The contract must not be paused
+     * - Can only be called by a freezer
+     * - The account address must not be zero
+     *
+     * @param account The account whose tokens will be frozen
+     * @param amount The amount of tokens to freeze
+     */
+    function freeze(address account, uint256 amount, bytes32 txId) external whenNotPaused onlyRole(FREEZER_ROLE) {
+        IBalanceFreezerShard.Error err = _shard(txId).registerFrozenBalanceChange(txId, TransferStatus.Executed);
+        _checkAndRevert(err);
+
+        uint256 oldBalance = IERC20Freezable(_token).balanceOfFrozen(account);
+
+        IERC20Freezable(_token).freeze(account, amount);
+
+        emit BalanceFrozen(account, amount, oldBalance, txId);
+    }
+
+    /**
+     * @inheritdoc IERC20Freezable
+     *
+     * @dev The contract must not be paused
+     * @dev Can only be called by a freezer
+     * @dev The account address must not be zero
+     * @dev The amount must not be zero
+     */
+    function freezeIncrease(address account, uint256 amount, bytes32 txId) external whenNotPaused onlyRole(FREEZER_ROLE) {
+        IBalanceFreezerShard.Error err = _shard(txId).registerFrozenBalanceChange(txId, TransferStatus.Executed);
+        _checkAndRevert(err);
+
+        uint256 oldBalance = IERC20Freezable(_token).balanceOfFrozen(account);
+
+        IERC20Freezable(_token).freezeIncrease(account, amount);
+
+        emit BalanceFrozen(account, oldBalance + amount, oldBalance, txId);
+    }
+
+    /**
+     * @inheritdoc IERC20Freezable
+     *
+     * @dev The contract must not be paused
+     * @dev Can only be called by a freezer
+     * @dev The account address must not be zero
+     * @dev The amount must not be zero
+     */
+    function freezeDecrease(address account, uint256 amount, bytes32 txId) external whenNotPaused onlyRole(FREEZER_ROLE) {
+        IBalanceFreezerShard.Error err = _shard(txId).registerFrozenBalanceChange(txId, TransferStatus.Executed);
+        _checkAndRevert(err);
+
+        uint256 oldBalance = IERC20Freezable(_token).balanceOfFrozen(account);
+
+        IERC20Freezable(_token).freezeDecrease(account, amount);
+
+        emit BalanceFrozen(account, oldBalance - amount, oldBalance, txId);
+    }
+
+    /**
      * @inheritdoc IERC20Freezable
      *
      * @dev The contract must not be paused
@@ -108,17 +186,24 @@ contract BalanceFreezer is
      * @dev The frozen balance must be greater than the `amount`
      */
     function transferFrozen(address from, address to, uint256 amount, bytes32 txId) public virtual whenNotPaused onlyRole(FREEZER_ROLE) {
-        IBalanceFreezerShard.Error err = _shard(txId).registerFrozenBalanceTransfer(from, amount, txId, TransferStatus.Executed);
-
-        uint256 oldFrozenBalance = IERC20Freezable(_token).balanceOfFrozen(from);
-
-        if (amount > oldFrozenBalance) {
-            revert LackOfFrozenBalance();
-        }
-
-        emit FrozenBalanceTransfer(from, amount, txId);
+        IBalanceFreezerShard.Error err = _shard(txId).registerFrozenBalanceTransfer(txId, TransferStatus.Executed);
+        _checkAndRevert(err);
 
         IERC20Freezable(_token).transferFrozen(from, to, amount);
+
+        emit FrozenBalanceTransfer(from, to, amount, txId);
+    }
+
+    /**
+     * @dev Checks the freezing ability and execute it
+     */
+    function _checkAndRevert(IBalanceFreezerShard.Error err) internal {
+        if (err != IBalanceFreezerShard.Error.None) {
+            if (err == IBalanceFreezerShard.Error.ZeroTxId) revert ZeroTxId();
+            if (err == IBalanceFreezerShard.Error.ChangeAlreadyExecuted) revert ChangeAlreadyExecuted();
+            if (err == IBalanceFreezerShard.Error.TransferAlreadyExecuted) revert TransferAlreadyExecuted();
+            revert ShardError(err);
+        }
     }
 
     /**

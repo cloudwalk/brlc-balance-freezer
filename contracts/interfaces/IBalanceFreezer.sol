@@ -10,22 +10,46 @@ pragma solidity ^0.8.0;
 interface IBalanceFreezer {
 
     /**
-     * @notice Emitted when frozen tokens have been transferred from an account
-     *
-     * @param account The account from which frozen tokens have been transferred
-     * @param amount The amount of frozen tokens transferred
-     * @param txId The transaction ID of the transfer
-     */
-    event FrozenBalanceTransfer(address indexed account, uint256 amount, bytes32 txId);
-
-    /**
      * @notice Emitted when token freezing has been performed for a specific account
      *
      * @param account The account for which token freezing has been performed
      * @param newFrozenBalance The updated frozen balance of the account
      * @param oldFrozenBalance The previous frozen balance of the account
+     * @param txId The transaction ID of the balance freeze
      */
-    event BalanceFrozen(address indexed account, uint256 newFrozenBalance, uint256 oldFrozenBalance);
+    event BalanceFrozen(address indexed account, uint256 newFrozenBalance, uint256 oldFrozenBalance, bytes32 indexed txId);
+
+    /**
+     * @notice Emitted when frozen tokens have been transferred from an account
+     *
+     * @param from The account from which frozen tokens have been transferred
+     * @param to The account which frozen tokens have been transferred to
+     * @param amount The amount of frozen tokens transferred
+     * @param txId The transaction ID of the transfer
+     */
+    event FrozenBalanceTransfer(address indexed from, address indexed to, uint256 amount, bytes32 indexed txId);
+
+    /**
+     * @notice Increases the frozen balance for an account
+     *
+     * Emits a {BalanceFrozen} event
+     *
+     * @param account The account to increase frozen balance for
+     * @param amount The amount to increase the frozen balance by
+     * @param txId The transaction ID of the balance frozen change
+     */
+    function freezeIncrease(address account, uint256 amount, bytes32 txId) external;
+
+    /**
+     * @notice Decreases the frozen balance for an account
+     *
+     * Emits a {BalanceFrozen} event
+     *
+     * @param account The account to decrease frozen balance for
+     * @param amount The amount to decrease the frozen balance by
+     * @param txId The transaction ID of the balance frozen change
+     */
+    function freezeDecrease(address account, uint256 amount, bytes32 txId) external;
 
     /**
      * @notice Transfers frozen tokens on behalf of an account

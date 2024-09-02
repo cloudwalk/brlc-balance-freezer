@@ -68,6 +68,29 @@ contract BalanceFreezerShard is BalanceFreezerShardStorage, OwnableUpgradeable, 
     /**
      * @inheritdoc IBalanceFreezerShard
      */
+    function registerFrozenBalanceChange(
+        bytes32 txId,
+        TransferStatus status
+    ) external returns (Error err) {
+        if (txId == 0) {
+            return Error.ZeroTxId;
+        }
+
+        Operation storage operation = _changeFrozenOperations[txId];
+
+        if (operation.status != OperationStatus.Nonexistent) {
+            return Error.ChangeAlreadyExecuted;
+        }
+
+        operation.status = status;
+        operation.txId = txId;
+
+        return Error.None;
+    }
+
+    /**
+     * @inheritdoc IBalanceFreezerShard
+     */
     function registerFrozenBalanceTransfer(
         bytes32 txId,
         TransferStatus targetStatus
@@ -76,10 +99,10 @@ contract BalanceFreezerShard is BalanceFreezerShardStorage, OwnableUpgradeable, 
             return Error.ZeroTxId;
         }
 
-        TransferOperation storage operation = _transferFrozenOperations[txId];
+        Operation storage operation = _transferFrozenOperations[txId];
 
-        if (operation.status != TransferStatus.Nonexistent) {
-            return Error.TransferFrozenAlreadyExecuted;
+        if (operation.status != OperationStatus.Nonexistent) {
+            return Error.TransferAlreadyExecuted;
         }
 
         operation.status = targetStatus;
