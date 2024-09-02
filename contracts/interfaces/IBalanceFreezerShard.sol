@@ -14,14 +14,7 @@ interface IBalanceFreezerShard is IBalanceFreezerTypes{
      * @dev Enumeration of the shard contract possible errors.
      */
     enum Error {
-        None,
-        ZeroAccount,
-        ZeroAmount,
-        ZeroTxId,
-        AmountExcess,
-        TransferFrozenAlreadyExecuted,
-        InappropriateStatus,
-        InappropriateAccount
+        TransferAlreadyExecuted
     }
 
     /**
@@ -39,11 +32,9 @@ interface IBalanceFreezerShard is IBalanceFreezerTypes{
      * @param status The status of the transfer frozen operation.
      * @return err The error code if the operation fails, otherwise None.
      */
-    function registerTransferFrozen(
-        address from,
-        uint256 amount,
+    function registerFrozenBalanceTransfer(
         bytes32 txId,
-        TransferFrozenStatus status
+        TransferStatus status
     ) external returns (Error err);
 
     /**

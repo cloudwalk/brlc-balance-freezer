@@ -15,9 +15,6 @@ pragma solidity ^0.8.0;
  */
 abstract contract BalanceFreezerStorage is IBalanceFreezerTypes{
 
-    /// @notice The mapping of the configured freezers
-    mapping(address => bool) private _freezers;
-
     /// @dev The address of the underlying token.
     address internal _token;
 

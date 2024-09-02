@@ -8,26 +8,6 @@ pragma solidity ^0.8.0;
  * @notice The interface of a token that supports freezing operations
  */
 interface IBalanceFreezer {
-    /**
-     * @notice Emitted when a freezer account is assigned
-     *
-     * @param freezer The address of the assigned freezer
-     */
-    event FreezerAssigned(address indexed freezer);
-
-    /**
-     * @notice Emitted when a freezer account is removed
-     *
-     * @param freezer The address of the removed freezer
-     */
-    event FreezerRemoved(address indexed freezer);
-
-    /**
-     * @notice Emitted when token freezing has been approved for an account
-     *
-     * @param account The account for which token freezing has been approved
-     */
-    event FreezeApproval(address indexed account);
 
     /**
      * @notice Emitted when frozen tokens have been transferred from an account
@@ -36,7 +16,7 @@ interface IBalanceFreezer {
      * @param amount The amount of frozen tokens transferred
      * @param txId The transaction ID of the transfer
      */
-    event FreezeTransfer(address indexed account, uint256 amount, bytes32 txId);
+    event FrozenBalanceTransfer(address indexed account, uint256 amount, bytes32 txId);
 
     /**
      * @notice Emitted when token freezing has been performed for a specific account
@@ -45,12 +25,12 @@ interface IBalanceFreezer {
      * @param newFrozenBalance The updated frozen balance of the account
      * @param oldFrozenBalance The previous frozen balance of the account
      */
-    event Freeze(address indexed account, uint256 newFrozenBalance, uint256 oldFrozenBalance);
+    event BalanceFrozen(address indexed account, uint256 newFrozenBalance, uint256 oldFrozenBalance);
 
     /**
      * @notice Transfers frozen tokens on behalf of an account
      *
-     * Emits a {FreezeTransfer} event
+     * Emits a {FrozenBalanceTransfer} event
      *
      * @param from The account tokens will be transferred from
      * @param to The account tokens will be transferred to

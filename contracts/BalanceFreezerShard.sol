@@ -68,34 +68,22 @@ contract BalanceFreezerShard is BalanceFreezerShardStorage, OwnableUpgradeable, 
     /**
      * @inheritdoc IBalanceFreezerShard
      */
-    function registerTransferFrozen(
-        address from,
-        uint256 amount,
+    function registerFrozenBalanceTransfer(
         bytes32 txId,
-        TransferFrozenStatus targetStatus
+        TransferStatus targetStatus
     ) external onlyOwnerOrAdmin returns (Error) {
-        if (from == address(0) || to == address(0)) {
-            return Error.ZeroAccount;
-        }
-        if (amount == 0) {
-            return Error.ZeroAmount;
-        }
         if (txId == 0) {
             return Error.ZeroTxId;
         }
-        if (amount > type(uint64).max) {
-            return Error.AmountExcess;
-        }
 
-        TransferFrozenOperation storage operation = _transferFrozenOperations[txId];
+        TransferOperation storage operation = _transferFrozenOperations[txId];
 
-        if (operation.status != TransferFrozenStatus.Nonexistent) {
+        if (operation.status != TransferStatus.Nonexistent) {
             return Error.TransferFrozenAlreadyExecuted;
         }
 
-        operation.from = from;
-        operation.amount = uint64(amount);
         operation.status = targetStatus;
+        operation.txId = txId;
 
         return Error.None;
     }

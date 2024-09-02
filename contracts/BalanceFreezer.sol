@@ -108,7 +108,7 @@ contract BalanceFreezer is
      * @dev The frozen balance must be greater than the `amount`
      */
     function transferFrozen(address from, address to, uint256 amount, bytes32 txId) public virtual whenNotPaused onlyRole(FREEZER_ROLE) {
-        IBalanceFreezerShard.Error err = _shard(txId).registerTransferFrozen(from, amount, txId, TransferFrozenStatus.Executed);
+        IBalanceFreezerShard.Error err = _shard(txId).registerFrozenBalanceTransfer(from, amount, txId, TransferStatus.Executed);
 
         uint256 oldFrozenBalance = IERC20Freezable(_token).balanceOfFrozen(from);
 
@@ -116,7 +116,7 @@ contract BalanceFreezer is
             revert LackOfFrozenBalance();
         }
 
-        emit FreezeTransfer(from, amount, txId);
+        emit FrozenBalanceTransfer(from, amount, txId);
 
         IERC20Freezable(_token).transferFrozen(from, to, amount);
     }

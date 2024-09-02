@@ -11,7 +11,7 @@ interface IERC20Freezable {
     /**
      * @notice Transfers frozen tokens on behalf of an account
      *
-     * Emits a {FreezeTransfer} event
+     * Emits a {FrozenBalanceTransfer} event
      *
      * @param from The account tokens will be transferred from
      * @param to The account tokens will be transferred to

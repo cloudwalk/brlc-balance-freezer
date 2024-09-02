@@ -15,15 +15,14 @@ interface IBalanceFreezerTypes {
      * - Nonexistent ----- The operation does not exist (the default value).
      * - Executed -------- The operation was executed.
      */
-    enum TransferFrozenStatus {
+    enum TransferStatus {
         Nonexistent,    // 0
         Executed        // 1
     }
 
     /// @dev Structure with data of a single operation.
-    struct TransferFrozenOperation {
-        TransferFrozenStatus status;  // The status of the transfer frozen operation according to the {TransferFrozenStatus} enum.
-        address from;                 // The sender of tokens.
-        uint64 amount;                // The amount of tokens.
+    struct TransferOperation {
+        TransferStatus status;  // The status of the transfer frozen operation according to the {TransferStatus} enum.
+        bytes32 txId;                // The off-chain identifier of the operation.
     }
 }

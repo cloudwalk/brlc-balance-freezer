@@ -18,7 +18,7 @@ abstract contract BalanceFreezerShardStorage is IBalanceFreezerTypes{
     mapping(address => bool) internal _admins;
 
     /// @dev The mapping of a transfer frozen operation structure for a given off-chain transaction identifier.
-    mapping(bytes32 => TransferFrozenOperation) internal _transferFrozenOperations;
+    mapping(bytes32 => TransferOperation) internal _transferFrozenOperations;
 
     uint256[47] private __gap;
 }
