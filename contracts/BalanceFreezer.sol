@@ -2,17 +2,17 @@
 
 pragma solidity 0.8.24;
 
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
 import { AccessControlExtUpgradeable } from "./base/AccessControlExtUpgradeable.sol";
 import { PausableExtUpgradeable } from "./base/PausableExtUpgradeable.sol";
 import { RescuableUpgradeable } from "./base/RescuableUpgradeable.sol";
 
-import { BalanceFreezerStorage } from "./BalanceFreezerStorage.sol";
 import { IBalanceFreezer } from "./interfaces/IBalanceFreezer.sol";
+import { IBalanceFreezerShard } from "./interfaces/IBalanceFreezerShard.sol";
 import { IERC20Freezable } from "./interfaces/IERC20Freezable.sol";
+
+import { BalanceFreezerStorage } from "./BalanceFreezerStorage.sol";
 
 /**
  * @title BalanceFreezer contract
@@ -27,8 +27,6 @@ contract BalanceFreezer is
     UUPSUpgradeable,
     IBalanceFreezer
 {
-    using SafeERC20 for IERC20;
-
     // ------------------ Constants ------------------------------- //
 
     /// @dev The role of this contract owner.
@@ -147,7 +145,7 @@ contract BalanceFreezer is
     }
 
     /**
-     * @inheritdoc IERC20Freezable
+     * @inheritdoc IBalanceFreezer
      *
      * @dev Requirements:
      *
@@ -176,7 +174,7 @@ contract BalanceFreezer is
     }
 
     /**
-     * @inheritdoc IERC20Freezable
+     * @inheritdoc IBalanceFreezer
      *
      * @dev Requirements:
      *
@@ -205,7 +203,7 @@ contract BalanceFreezer is
     }
 
     /**
-     * @inheritdoc IERC20Freezable
+     * @inheritdoc IBalanceFreezer
      *
      * @dev Requirements:
      *
@@ -256,16 +254,16 @@ contract BalanceFreezer is
     }
 
     /**
-     * @inheritdoc IERC20Freezable
+     * @inheritdoc IBalanceFreezer
      */
     function balanceOfFrozen(address account) public view returns (uint256) {
         return IERC20Freezable(_token).balanceOfFrozen(account);
     }
 
     /**
-     * @inheritdoc IPixCashierRoot
+     * @inheritdoc IBalanceFreezer
      */
-    function underlyingToken(address account) external view returns (address) {
+    function underlyingToken() external view returns (address) {
         return _token;
     }
 }

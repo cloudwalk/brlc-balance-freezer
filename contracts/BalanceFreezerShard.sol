@@ -6,6 +6,7 @@ import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/O
 import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
 import { IBalanceFreezerShard } from "./interfaces/IBalanceFreezerShard.sol";
+
 import { BalanceFreezerShardStorage } from "./BalanceFreezerShardStorage.sol";
 
 /**

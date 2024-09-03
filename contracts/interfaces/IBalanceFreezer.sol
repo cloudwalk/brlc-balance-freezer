@@ -99,5 +99,5 @@ interface IBalanceFreezer {
     /**
      * @dev Returns the address of the underlying token.
      */
-    function underlyingToken(address account) external view returns (uint256);
+    function underlyingToken() external view returns (address);
 }

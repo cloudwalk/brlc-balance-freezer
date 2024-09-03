@@ -2,8 +2,6 @@
 
 pragma solidity ^0.8.0;
 
-import { EnumerableSet } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
-
 import { IBalanceFreezerShard } from "./interfaces/IBalanceFreezerShard.sol";
 import { IBalanceFreezerTypes } from "./interfaces/IBalanceFreezerTypes.sol";
 
