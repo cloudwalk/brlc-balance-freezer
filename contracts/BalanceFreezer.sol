@@ -37,6 +37,12 @@ contract BalanceFreezer is
 
     // ------------------ Errors ---------------------------------- //
 
+    /// @dev Throws if the provided root address is zero.
+    error ZeroRootAddress();
+
+    /// @dev Throws if the provided shard address is zero.
+    error ZeroShardAddress();
+
     /// @dev Thrown if the provided token address is zero.
     error ZeroTokenAddress();
 
@@ -265,5 +271,57 @@ contract BalanceFreezer is
      */
     function underlyingToken() external view returns (address) {
         return _token;
+    }
+
+    /**
+     * @dev The upgrade authorization function for UUPSProxy.
+     * @param newImplementation The address of the new implementation.
+     */
+    function _authorizeUpgrade(address newImplementation) internal view override onlyRole(OWNER_ROLE) {
+        newImplementation; // Suppresses a compiler warning about the unused variable.
+    }
+
+    // ------------------ Service functions ----------------------- //
+
+    /**
+     * @dev The version of the standard upgrade function without the second parameter for backward compatibility.
+     * @custom:oz-upgrades-unsafe-allow-reachable delegatecall
+     */
+    function upgradeTo(address newImplementation) external {
+        upgradeToAndCall(newImplementation, "");
+    }
+
+    /**
+     * @dev Upgrades the range of the underlying shard contracts to the a implementation.
+     * @param newImplementation The address of the new shard implementation.
+     */
+    function upgradeShardsTo(address newImplementation) external onlyRole(OWNER_ROLE) {
+        if (newImplementation == address(0)) {
+            revert ZeroShardAddress();
+        }
+
+        for (uint256 i = 0; i < _shards.length; i++) {
+            _shards[i].upgradeTo(newImplementation);
+        }
+    }
+
+    /**
+     * @dev Upgrades the root and shard contracts to the new implementations.
+     * @param newRootImplementation The address of the new root implementation.
+     * @param newShardImplementation The address of the new shard implementation.
+     */
+    function upgradeRootAndShardsTo(address newRootImplementation, address newShardImplementation) external {
+        if (newRootImplementation == address(0)) {
+            revert ZeroRootAddress();
+        }
+        if (newShardImplementation == address(0)) {
+            revert ZeroShardAddress();
+        }
+
+        upgradeToAndCall(newRootImplementation, "");
+
+        for (uint256 i = 0; i < _shards.length; i++) {
+            _shards[i].upgradeTo(newShardImplementation);
+        }
     }
 }
