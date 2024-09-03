@@ -34,21 +34,21 @@ contract BalanceFreezer is
     /// @dev The role of this contract owner.
     bytes32 public constant OWNER_ROLE = keccak256("OWNER_ROLE");
 
-    /// @dev The role of freezer that is allowed to execute operations with frozen balance.
+    /// @dev The role of freezer that is allowed to change and transfer the frozen balance of accounts.
     bytes32 public constant FREEZER_ROLE = keccak256("FREEZER_ROLE");
 
     // ------------------ Errors ---------------------------------- //
 
-    /// @dev Throws if the provided token address is zero.
+    /// @dev Thrown if the provided token address is zero.
     error ZeroTokenAddress();
 
-    /// @dev Throws if the provided off-chain transaction identifier is zero.
+    /// @dev Thrown if the provided off-chain transaction identifier is zero.
     error ZeroTxId();
 
-    /// @dev Thrown if the operation with the provided txId is already executed.
+    /// @dev Thrown if the operation with the provided `txId` is already executed.
     error AlreadyExecuted();
 
-    /// @dev Throws if the shard contract returns an error.
+    /// @dev Throws if a shard contract returns an error.
     error ShardError(IBalanceFreezerShard.Error err);
 
     // ------------------ Initializers ---------------------------- //
@@ -110,21 +110,22 @@ contract BalanceFreezer is
     // ------------------ Functions ------------------------------- //
 
     /**
-     * @dev [DEPRECATED] Freezes tokens of the specified account
+     * @dev [DEPRECATED] Freezes tokens of the specified account.
      *
-     * Emits a {Freeze} event
+     * Emits a {FrozenBalanceChanged} event.
      *
      * IMPORTANT: This function is deprecated and will be removed in the future updates of the contract.
      *            Use the {freezeIncrease} and {freezeDecrease} functions instead.
      *
      * Requirements:
      *
-     * - The contract must not be paused
-     * - Can only be called by a freezer
-     * - The account address must not be zero
+     * - The contract must not be paused.
+     * - The caller must have the {FREEZER_ROLE} role.
+     * - The transaction ID must not be zero.
+     * - The requirements of the related token contract function must be met.
      *
-     * @param account The account whose tokens will be frozen
-     * @param amount The amount of tokens to freeze
+     * @param account The account whose tokens will be frozen.
+     * @param amount The amount of tokens to freeze.
      */
     function freeze(address account, uint256 amount, bytes32 txId) external whenNotPaused onlyRole(FREEZER_ROLE) {
         if (txId == 0) {
@@ -144,11 +145,12 @@ contract BalanceFreezer is
     /**
      * @inheritdoc IERC20Freezable
      *
-     * @dev The contract must not be paused
-     * @dev Can only be called by a freezer
-     * @dev The account address must not be zero
-     * @dev The amount must not be zero
-     * @dev The transaction must not be executed
+     * @dev Requirements:
+     *
+     * - The contract must not be paused.
+     * - The caller must have the {FREEZER_ROLE} role.
+     * - The transaction ID must not be zero.
+     * - The requirements of the related token contract function must be met.
      */
     function freezeIncrease(address account, uint256 amount, bytes32 txId) external whenNotPaused onlyRole(FREEZER_ROLE) {
         if (txId == 0) {
@@ -168,11 +170,12 @@ contract BalanceFreezer is
     /**
      * @inheritdoc IERC20Freezable
      *
-     * @dev The contract must not be paused
-     * @dev Can only be called by a freezer
-     * @dev The account address must not be zero
-     * @dev The amount must not be zero
-     * @dev The transaction must not be executed
+     * @dev Requirements:
+     *
+     * - The contract must not be paused.
+     * - The caller must have the {FREEZER_ROLE} role.
+     * - The transaction ID must not be zero.
+     * - The requirements of the related token contract function must be met.
      */
     function freezeDecrease(address account, uint256 amount, bytes32 txId) external whenNotPaused onlyRole(FREEZER_ROLE) {
         if (txId == 0) {
@@ -189,83 +192,15 @@ contract BalanceFreezer is
         emit FrozenBalanceChanged(account, oldBalance - amount, oldBalance, txId);
     }
 
-    // ------------------ changeFrozen Version 1 BEGIN ---------------------------- //
-
-    enum ChangeOperationType {
-        Change,     // 0
-        Replace     // 1
-    }
-
-    error IncorrectAmount();
-
-    function changeFrozen(address account, uint64 amount, ChangeOperationType updateType, bytes32 txId) external whenNotPaused onlyRole(FREEZER_ROLE) {
-        if (txId == 0) {
-            revert ZeroTxId();
-        }
-
-        IBalanceFreezerShard.Error err = _shard(txId).registerOperation(txId, OperationStatus.ChangeExecuted);
-        _checkAndRevert(err);
-
-        uint256 oldBalance = balanceOfFrozen(account);
-
-        if (updateType == ChangeOperationType.Replace) {
-            if (amount < 0) {
-                revert IncorrectAmount();
-            }
-            IERC20Freezable(_token).freeze(account, uint256(amount));
-        } else {
-            if (amount > 0) {
-                IERC20Freezable(_token).freezeIncrease(account, uint256(amount));
-            } else {
-                IERC20Freezable(_token).freezeDecrease(account, uint256(-amount));
-            }
-        }
-
-        emit FrozenBalanceChanged(account, oldBalance + amount, oldBalance, txId);
-    }
-
-    // ------------------ changeFrozen Version 1 END ---------------------------- //
-
-    // ------------------ changeFrozen Version 2 BEGIN ---------------------------- //
-
-    enum ChangeOperationType2 {
-        Update,     // 0
-        Increase,   // 1
-        Decrease    // 2
-    }
-
-    function changeFrozen2(address account, uint256 amount, ChangeOperationType2 updateType, bytes32 txId) external whenNotPaused onlyRole(FREEZER_ROLE) {
-        if (txId == 0) {
-            revert ZeroTxId();
-        }
-
-        IBalanceFreezerShard.Error err = _shard(txId).registerOperation(txId, OperationStatus.ChangeExecuted);
-        _checkAndRevert(err);
-
-        uint256 oldBalance = balanceOfFrozen(account);
-
-        if (updateType == ChangeOperationType2.Update) {
-            IERC20Freezable(_token).freeze(account, amount);
-        } else if (updateType == ChangeOperationType2.Increase) {
-            IERC20Freezable(_token).freezeIncrease(account, amount);
-        } else {
-            IERC20Freezable(_token).freezeDecrease(account, amount);
-        }
-
-        uint256 newBalance = balanceOfFrozen(account);
-
-        emit FrozenBalanceChanged(account, newBalance, oldBalance, txId);
-    }
-
-    // ------------------ changeFrozen Version 2 END ---------------------------- //
-
     /**
      * @inheritdoc IERC20Freezable
      *
-     * @dev The contract must not be paused
-     * @dev Can only be called by a freezer
-     * @dev The frozen balance must be greater than the `amount`
-     * @dev The transaction must not be executed
+     * @dev Requirements:
+     *
+     * - The contract must not be paused.
+     * - The caller must have the {FREEZER_ROLE} role.
+     * - The transaction ID must not be zero.
+     * - The requirements of the related token contract function must be met.
      */
     function transferFrozen(address from, address to, uint256 amount, bytes32 txId) public virtual whenNotPaused onlyRole(FREEZER_ROLE) {
         if (txId == 0) {
