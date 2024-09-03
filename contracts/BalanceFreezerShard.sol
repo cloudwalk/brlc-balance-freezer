@@ -2,7 +2,7 @@
 
 pragma solidity 0.8.24;
 
-import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import { ContextUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol";
 import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
 import { IBalanceFreezerShard } from "./interfaces/IBalanceFreezerShard.sol";
@@ -14,10 +14,10 @@ import { BalanceFreezerShardStorage } from "./BalanceFreezerShardStorage.sol";
  * @author CloudWalk Inc. (See https://www.cloudwalk.io)
  * @dev The contract responsible for storing sharded operations.
  */
-contract BalanceFreezerShard is BalanceFreezerShardStorage, OwnableUpgradeable, UUPSUpgradeable, IBalanceFreezerShard {
+contract BalanceFreezerShard is BalanceFreezerShardStorage, ContextUpgradeable, UUPSUpgradeable, IBalanceFreezerShard {
     // ------------------ Errors ---------------------------------- //
 
-    /// @dev Throws if the caller is not the owner or admin.
+    /// @dev Throws if the caller is not the admin.
     error Unauthorized();
 
     // ------------------ Initializers ---------------------------- //
@@ -27,10 +27,10 @@ contract BalanceFreezerShard is BalanceFreezerShardStorage, OwnableUpgradeable, 
      *
      * See details https://docs.openzeppelin.com/upgrades-plugins/1.x/writing-upgradeable.
      *
-     * @param owner_ The address of the contract owner.
+     * @param admin_ The address of the contract admin.
      */
-    function initialize(address owner_) external initializer {
-        __BalanceFreezerShard_init(owner_);
+    function initialize(address admin_) external initializer {
+        __BalanceFreezerShard_init(admin_);
     }
 
     /**
@@ -38,20 +38,21 @@ contract BalanceFreezerShard is BalanceFreezerShardStorage, OwnableUpgradeable, 
      *
      * See details https://docs.openzeppelin.com/upgrades-plugins/1.x/writing-upgradeable.
      *
-     * @param owner_ The address of the contract owner.
+     * @param admin_ The address of the contract admin.
      */
-    function __BalanceFreezerShard_init(address owner_) internal onlyInitializing {
+    function __BalanceFreezerShard_init(address admin_) internal onlyInitializing {
         __Context_init_unchained();
-        __Ownable_init_unchained(owner_);
         __UUPSUpgradeable_init_unchained();
 
         __BalanceFreezerShard_init_unchained();
+
+        _configureAdmin(admin_, true);
     }
 
     // ----------------------- Modifiers -------------------------- //
 
-    modifier onlyOwnerOrAdmin() {
-        if (msg.sender != owner() && !_admins[msg.sender]) {
+    modifier onlyAdmin() {
+        if (!_admins[msg.sender]) {
             revert Unauthorized();
         }
         _;
@@ -85,8 +86,8 @@ contract BalanceFreezerShard is BalanceFreezerShardStorage, OwnableUpgradeable, 
     /**
      * @inheritdoc IBalanceFreezerShard
      */
-    function setAdmin(address account, bool status) external onlyOwnerOrAdmin {
-        _admins[account] = status;
+    function configureAdmin(address account, bool status) external onlyAdmin {
+        _configureAdmin(account, status);
     }
 
     // ------------------ View functions -------------------------- //
@@ -99,10 +100,27 @@ contract BalanceFreezerShard is BalanceFreezerShardStorage, OwnableUpgradeable, 
     }
 
     /**
+     * @dev Configures an admin internally
+     */
+    function _configureAdmin(address account, bool status) internal {
+        if (_admins[account] == status) {
+            return;
+        }
+
+        _admins[account] = status;
+
+        if (status) {
+            emit ShardAdminAssigned(account);
+        } else {
+            emit ShardAdminRevoked(account);
+        }
+    }
+
+    /**
      * @dev The upgrade authorization function for UUPSProxy.
      * @param newImplementation The address of the new implementation.
      */
-    function _authorizeUpgrade(address newImplementation) internal view override onlyOwnerOrAdmin {
+    function _authorizeUpgrade(address newImplementation) internal view override onlyAdmin {
         newImplementation; // Suppresses a compiler warning about the unused variable.
     }
 

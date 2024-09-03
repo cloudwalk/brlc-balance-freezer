@@ -11,6 +11,20 @@ import { IBalanceFreezerTypes } from "./IBalanceFreezerTypes.sol";
  */
 interface IBalanceFreezerShard is IBalanceFreezerTypes {
     /**
+     * @notice Emitted when an admin is assigned
+     *
+     * @param admin The address of the assigned admin
+     */
+    event ShardAdminAssigned(address indexed admin);
+
+    /**
+     * @notice Emitted when an admin is removed
+     *
+     * @param admin The address of the removed admin
+     */
+    event ShardAdminRevoked(address indexed admin);
+
+    /**
      * @dev Enumeration of the shard contract possible errors.
      */
     enum Error {
@@ -20,11 +34,11 @@ interface IBalanceFreezerShard is IBalanceFreezerTypes {
     }
 
     /**
-     * @dev Sets the admin status of an account.
+     * @dev Configure the admin status of an account.
      * @param account The address of the account to configure.
      * @param status The admin status of the account.
      */
-    function setAdmin(address account, bool status) external;
+    function configureAdmin(address account, bool status) external;
 
     /**
      * @dev Registers an operation.
