@@ -2,14 +2,14 @@
 
 pragma solidity ^0.8.0;
 
-import {IBalanceFreezerTypes} from "./interfaces/IBalanceFreezerTypes.sol";
+import { IBalanceFreezerTypes } from "./interfaces/IBalanceFreezerTypes.sol";
 
 /**
  * @title BalanceFreezerShard storage
  * @author CloudWalk Inc. (See https://www.cloudwalk.io)
  * @dev Contains storage variables of the {BalanceFreezerShard} contract.
  */
-abstract contract BalanceFreezerShardStorage is IBalanceFreezerTypes{
+abstract contract BalanceFreezerShardStorage is IBalanceFreezerTypes {
     /// @dev The mapping of an account to its admin status (True if admin, False otherwise).
     mapping(address => bool) internal _admins;
 

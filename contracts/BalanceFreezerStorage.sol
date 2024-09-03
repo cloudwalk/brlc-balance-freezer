@@ -1,19 +1,18 @@
 // SPDX-License-Identifier: MIT
 
+pragma solidity ^0.8.0;
+
 import { EnumerableSet } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
-import {IBalanceFreezerShard} from "./interfaces/IBalanceFreezerShard.sol";
-
-import {IBalanceFreezerTypes} from "./interfaces/IBalanceFreezerTypes.sol";
-
-pragma solidity ^0.8.0;
+import { IBalanceFreezerShard } from "./interfaces/IBalanceFreezerShard.sol";
+import { IBalanceFreezerTypes } from "./interfaces/IBalanceFreezerTypes.sol";
 
 /**
  * @title BalanceFreezer storage
  * @author CloudWalk Inc. (See https://www.cloudwalk.io)
  * @dev Contains storage variables of the {BalanceFreezer} contract.
  */
-abstract contract BalanceFreezerStorage is IBalanceFreezerTypes{
+abstract contract BalanceFreezerStorage is IBalanceFreezerTypes {
     /// @dev The address of the underlying token.
     address internal _token;
 

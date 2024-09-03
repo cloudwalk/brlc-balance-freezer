@@ -5,8 +5,8 @@ pragma solidity 0.8.24;
 import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
-import {IBalanceFreezerShard} from "./interfaces/IBalanceFreezerShard.sol";
-import {BalanceFreezerShardStorage} from "./BalanceFreezerShardStorage.sol";
+import { IBalanceFreezerShard } from "./interfaces/IBalanceFreezerShard.sol";
+import { BalanceFreezerShardStorage } from "./BalanceFreezerShardStorage.sol";
 
 /**
  * @title BalanceFreezerShard contract
@@ -68,10 +68,7 @@ contract BalanceFreezerShard is BalanceFreezerShardStorage, OwnableUpgradeable, 
     /**
      * @inheritdoc IBalanceFreezerShard
      */
-    function registerOperation(
-        bytes32 txId,
-        OperationStatus status
-    ) external returns (Error err) {
+    function registerOperation(bytes32 txId, OperationStatus status) external returns (Error err) {
         Operation storage operation = _operations[txId];
 
         if (operation.status != OperationStatus.Nonexistent) {

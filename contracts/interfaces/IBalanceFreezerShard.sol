@@ -2,14 +2,14 @@
 
 pragma solidity ^0.8.0;
 
-import {IBalanceFreezerTypes} from "./IBalanceFreezerTypes.sol";
+import { IBalanceFreezerTypes } from "./IBalanceFreezerTypes.sol";
 
 /**
  * @title BalanceFreezer shard interface
  * @author CloudWalk Inc. (See https://www.cloudwalk.io)
  * @dev The interface of the contract that responsible for storing sharded frozen balance operations.
  */
-interface IBalanceFreezerShard is IBalanceFreezerTypes{
+interface IBalanceFreezerShard is IBalanceFreezerTypes {
     /**
      * @dev Enumeration of the shard contract possible errors.
      */
@@ -32,10 +32,7 @@ interface IBalanceFreezerShard is IBalanceFreezerTypes{
      * @param status The status of the operation.
      * @return err The error code if the operation fails, otherwise None.
      */
-    function registerOperation(
-        bytes32 txId,
-        OperationStatus status
-    ) external returns (Error err);
+    function registerOperation(bytes32 txId, OperationStatus status) external returns (Error err);
 
     /**
      * @dev Checks if an account is an admin.

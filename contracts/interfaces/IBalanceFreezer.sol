@@ -16,7 +16,12 @@ interface IBalanceFreezer {
      * @param oldFrozenBalance The previous frozen balance of the account.
      * @param txId The off-chain ID of the transaction that caused the frozen balance change.
      */
-    event FrozenBalanceChanged(address indexed account, uint256 newFrozenBalance, uint256 oldFrozenBalance, bytes32 indexed txId);
+    event FrozenBalanceChanged(
+        address indexed account,
+        uint256 newFrozenBalance,
+        uint256 oldFrozenBalance,
+        bytes32 indexed txId
+    );
 
     /**
      * @dev Emitted when frozen tokens have been transferred between accounts.
@@ -29,7 +34,12 @@ interface IBalanceFreezer {
      * @param amount The amount of the transferred frozen tokens.
      * @param txId The off-chain ID of the transaction that caused the transfer.
      */
-    event FrozenBalanceTransfer(address indexed from, address indexed to, uint256 amount, bytes32 indexed txId);
+    event FrozenBalanceTransfer(
+        address indexed from, // Tools: this comment prevents Prettier from formatting into a single line.
+        address indexed to,
+        uint256 amount,
+        bytes32 indexed txId
+    );
 
     /**
      * @dev Increases the frozen balance for an account.
@@ -40,7 +50,11 @@ interface IBalanceFreezer {
      * @param amount The amount to increase the frozen balance by.
      * @param txId The transaction ID of the balance frozen change.
      */
-    function freezeIncrease(address account, uint256 amount, bytes32 txId) external;
+    function freezeIncrease(
+        address account, // Tools: this comment prevents Prettier from formatting into a single line.
+        uint256 amount,
+        bytes32 txId
+    ) external;
 
     /**
      * @dev Decreases the frozen balance for an account.
@@ -51,7 +65,11 @@ interface IBalanceFreezer {
      * @param amount The amount to decrease the frozen balance by.
      * @param txId The transaction ID of the balance frozen change.
      */
-    function freezeDecrease(address account, uint256 amount, bytes32 txId) external;
+    function freezeDecrease(
+        address account, // Tools: this comment prevents Prettier from formatting into a single line.
+        uint256 amount,
+        bytes32 txId
+    ) external;
 
     /**
      * @dev Transfers frozen tokens on behalf of an account.
@@ -63,7 +81,12 @@ interface IBalanceFreezer {
      * @param amount The amount of tokens to transfer.
      * @param txId The transaction ID of the transfer.
      */
-    function transferFrozen(address from, address to, uint256 amount, bytes32 txId) external;
+    function transferFrozen(
+        address from, // Tools: this comment prevents Prettier from formatting into a single line.
+        address to,
+        uint256 amount,
+        bytes32 txId
+    ) external;
 
     /**
      * @dev Retrieves the frozen balance of an account.

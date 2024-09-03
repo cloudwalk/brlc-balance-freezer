@@ -10,9 +10,9 @@ import { AccessControlExtUpgradeable } from "./base/AccessControlExtUpgradeable.
 import { PausableExtUpgradeable } from "./base/PausableExtUpgradeable.sol";
 import { RescuableUpgradeable } from "./base/RescuableUpgradeable.sol";
 
-import {BalanceFreezerStorage} from "./BalanceFreezerStorage.sol";
-import {IBalanceFreezer} from "./interfaces/IBalanceFreezer.sol";
-import {IERC20Freezable} from "./interfaces/IERC20Freezable.sol";
+import { BalanceFreezerStorage } from "./BalanceFreezerStorage.sol";
+import { IBalanceFreezer } from "./interfaces/IBalanceFreezer.sol";
+import { IERC20Freezable } from "./interfaces/IERC20Freezable.sol";
 
 /**
  * @title BalanceFreezer contract
@@ -127,7 +127,11 @@ contract BalanceFreezer is
      * @param account The account whose tokens will be frozen.
      * @param amount The amount of tokens to freeze.
      */
-    function freeze(address account, uint256 amount, bytes32 txId) external whenNotPaused onlyRole(FREEZER_ROLE) {
+    function freeze(
+        address account, // Tools: this comment prevents Prettier from formatting into a single line.
+        uint256 amount,
+        bytes32 txId
+    ) external whenNotPaused onlyRole(FREEZER_ROLE) {
         if (txId == 0) {
             revert ZeroTxId();
         }
@@ -152,7 +156,11 @@ contract BalanceFreezer is
      * - The transaction ID must not be zero.
      * - The requirements of the related token contract function must be met.
      */
-    function freezeIncrease(address account, uint256 amount, bytes32 txId) external whenNotPaused onlyRole(FREEZER_ROLE) {
+    function freezeIncrease(
+        address account,
+        uint256 amount,
+        bytes32 txId
+    ) external whenNotPaused onlyRole(FREEZER_ROLE) {
         if (txId == 0) {
             revert ZeroTxId();
         }
@@ -177,7 +185,11 @@ contract BalanceFreezer is
      * - The transaction ID must not be zero.
      * - The requirements of the related token contract function must be met.
      */
-    function freezeDecrease(address account, uint256 amount, bytes32 txId) external whenNotPaused onlyRole(FREEZER_ROLE) {
+    function freezeDecrease(
+        address account,
+        uint256 amount,
+        bytes32 txId
+    ) external whenNotPaused onlyRole(FREEZER_ROLE) {
         if (txId == 0) {
             revert ZeroTxId();
         }
@@ -202,7 +214,12 @@ contract BalanceFreezer is
      * - The transaction ID must not be zero.
      * - The requirements of the related token contract function must be met.
      */
-    function transferFrozen(address from, address to, uint256 amount, bytes32 txId) public virtual whenNotPaused onlyRole(FREEZER_ROLE) {
+    function transferFrozen(
+        address from,
+        address to,
+        uint256 amount,
+        bytes32 txId
+    ) public virtual whenNotPaused onlyRole(FREEZER_ROLE) {
         if (txId == 0) {
             revert ZeroTxId();
         }
