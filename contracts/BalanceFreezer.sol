@@ -239,25 +239,7 @@ contract BalanceFreezer is
         emit FrozenBalanceChanged(from, newBalance, oldBalance, txId);
     }
 
-    /**
-     * @dev Checks shard errors and reverts if necessary.
-     */
-    function _checkAndRevert(IBalanceFreezerShard.Error err) internal {
-        if (err != IBalanceFreezerShard.Error.None) {
-            if (err == IBalanceFreezerShard.Error.OperationAlreadyExecuted) revert AlreadyExecuted();
-            revert ShardError(err);
-        }
-    }
-
-    /**
-     * @dev Returns the shard contract by the off-chain transaction identifier.
-     * @param txId The off-chain transaction identifier of the operation.
-     */
-    function _shard(bytes32 txId) internal view returns (IBalanceFreezerShard) {
-        uint256 i = uint256(keccak256(abi.encodePacked(txId)));
-        i %= _shards.length;
-        return _shards[i];
-    }
+    // ------------------ View functions -------------------------- //
 
     /**
      * @inheritdoc IBalanceFreezer
@@ -271,6 +253,28 @@ contract BalanceFreezer is
      */
     function underlyingToken() external view returns (address) {
         return _token;
+    }
+
+    // ------------------ Internal functions ---------------------- //
+
+    /**
+     * @dev Returns the shard contract by the off-chain transaction identifier.
+     * @param txId The off-chain transaction identifier of the operation.
+     */
+    function _shard(bytes32 txId) internal view returns (IBalanceFreezerShard) {
+        uint256 i = uint256(keccak256(abi.encodePacked(txId)));
+        i %= _shards.length;
+        return _shards[i];
+    }
+
+    /**
+     * @dev Checks shard errors and reverts if necessary.
+     */
+    function _checkAndRevert(IBalanceFreezerShard.Error err) internal {
+        if (err != IBalanceFreezerShard.Error.None) {
+            if (err == IBalanceFreezerShard.Error.OperationAlreadyExecuted) revert AlreadyExecuted();
+            revert ShardError(err);
+        }
     }
 
     /**
