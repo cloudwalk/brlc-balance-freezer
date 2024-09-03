@@ -17,7 +17,7 @@ import { BalanceFreezerShardStorage } from "./BalanceFreezerShardStorage.sol";
 contract BalanceFreezerShard is BalanceFreezerShardStorage, ContextUpgradeable, UUPSUpgradeable, IBalanceFreezerShard {
     // ------------------ Errors ---------------------------------- //
 
-    /// @dev Throws if the caller is not the admin.
+    /// @dev Throws if the caller is not an admin.
     error Unauthorized();
 
     // ------------------ Initializers ---------------------------- //
@@ -44,8 +44,17 @@ contract BalanceFreezerShard is BalanceFreezerShardStorage, ContextUpgradeable, 
         __Context_init_unchained();
         __UUPSUpgradeable_init_unchained();
 
-        __BalanceFreezerShard_init_unchained();
+        __BalanceFreezerShard_init_unchained(admin_);
+    }
 
+    /**
+     * @dev Unchained internal initializer of the upgradable contract.
+     *
+     * See details https://docs.openzeppelin.com/upgrades-plugins/1.x/writing-upgradeable.
+     *
+     * @param admin_ The address of the contract admin.
+     */
+    function __BalanceFreezerShard_init_unchained(address admin_) internal onlyInitializing {
         _configureAdmin(admin_, true);
     }
 
@@ -57,13 +66,6 @@ contract BalanceFreezerShard is BalanceFreezerShardStorage, ContextUpgradeable, 
         }
         _;
     }
-
-    /**
-     * @dev Unchained internal initializer of the upgradable contract.
-     *
-     * See details https://docs.openzeppelin.com/upgrades-plugins/1.x/writing-upgradeable.
-     */
-    function __BalanceFreezerShard_init_unchained() internal onlyInitializing {}
 
     // ----------------------- Functions -------------------------- //
 
@@ -98,6 +100,8 @@ contract BalanceFreezerShard is BalanceFreezerShardStorage, ContextUpgradeable, 
     function isAdmin(address account) external view returns (bool) {
         return _admins[account];
     }
+
+    // ------------------ Internal functions ---------------------- //
 
     /**
      * @dev Configures an admin internally

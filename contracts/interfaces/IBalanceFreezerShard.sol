@@ -11,27 +11,24 @@ import { IBalanceFreezerTypes } from "./IBalanceFreezerTypes.sol";
  */
 interface IBalanceFreezerShard is IBalanceFreezerTypes {
     /**
-     * @notice Emitted when an admin is assigned
-     *
-     * @param admin The address of the assigned admin
-     */
-    event ShardAdminAssigned(address indexed admin);
-
-    /**
-     * @notice Emitted when an admin is removed
-     *
-     * @param admin The address of the removed admin
-     */
-    event ShardAdminRevoked(address indexed admin);
-
-    /**
      * @dev Enumeration of the shard contract possible errors.
      */
     enum Error {
         None,
-        ZeroTxId,
         OperationAlreadyExecuted
     }
+
+    /**
+     * @dev Emitted when an account is assigned the admin role.
+     * @param admin The address of the assigned admin.
+     */
+    event ShardAdminAssigned(address indexed admin);
+
+    /**
+     * @dev Emitted when the admin role is revoked from an account.
+     * @param admin The address of the revoked admin.
+     */
+    event ShardAdminRevoked(address indexed admin);
 
     /**
      * @dev Configure the admin status of an account.

@@ -46,6 +46,9 @@ contract BalanceFreezer is
     /// @dev Thrown if the provided token address is zero.
     error ZeroTokenAddress();
 
+    /// @dev Throws if the provided account address is zero.
+    error ZeroAccountAddress();
+
     /// @dev Thrown if the provided off-chain transaction identifier is zero.
     error ZeroTxId();
 
@@ -54,9 +57,6 @@ contract BalanceFreezer is
 
     /// @dev Throws if a shard contract returns an error.
     error ShardError(IBalanceFreezerShard.Error err);
-
-    /// @dev Throws if the provided account address is zero.
-    error ZeroAccount();
 
     // ------------------ Initializers ---------------------------- //
 
@@ -144,7 +144,7 @@ contract BalanceFreezer is
         }
 
         IBalanceFreezerShard.Error err = _shard(txId).registerOperation(txId, OperationStatus.ChangeExecuted);
-        _checkAndRevert(err);
+        _checkShardError(err);
 
         uint256 oldBalance = balanceOfFrozen(account);
 
@@ -173,7 +173,7 @@ contract BalanceFreezer is
         }
 
         IBalanceFreezerShard.Error err = _shard(txId).registerOperation(txId, OperationStatus.ChangeExecuted);
-        _checkAndRevert(err);
+        _checkShardError(err);
 
         uint256 oldBalance = balanceOfFrozen(account);
 
@@ -202,7 +202,7 @@ contract BalanceFreezer is
         }
 
         IBalanceFreezerShard.Error err = _shard(txId).registerOperation(txId, OperationStatus.ChangeExecuted);
-        _checkAndRevert(err);
+        _checkShardError(err);
 
         uint256 oldBalance = balanceOfFrozen(account);
 
@@ -232,7 +232,7 @@ contract BalanceFreezer is
         }
 
         IBalanceFreezerShard.Error err = _shard(txId).registerOperation(txId, OperationStatus.TransferExecuted);
-        _checkAndRevert(err);
+        _checkShardError(err);
 
         uint256 oldBalance = balanceOfFrozen(from);
         IERC20Freezable(_token).transferFrozen(from, to, amount);
@@ -240,6 +240,26 @@ contract BalanceFreezer is
 
         emit FrozenBalanceTransfer(from, to, amount, txId);
         emit FrozenBalanceChanged(from, newBalance, oldBalance, txId);
+    }
+
+    /**
+     * @inheritdoc IBalanceFreezer
+     *
+     * @dev Requirements:
+     *
+     * - The caller must have the {OWNER_ROLE} role.
+     */
+    function configureShardAdmin(address account, bool status) external onlyRole(OWNER_ROLE) {
+        if (account == address(0)) {
+            revert ZeroAccountAddress();
+        }
+
+        uint256 shardCounter = _shards.length;
+        for (uint256 i; i < shardCounter; i++) {
+            _shards[i].configureAdmin(account, status);
+        }
+
+        emit ShardAdminConfigured(account, status, shardCounter);
     }
 
     // ------------------ View functions -------------------------- //
@@ -271,9 +291,9 @@ contract BalanceFreezer is
     }
 
     /**
-     * @dev Checks shard errors and reverts if necessary.
+     * @dev Checks a shard error and reverts if necessary.
      */
-    function _checkAndRevert(IBalanceFreezerShard.Error err) internal {
+    function _checkShardError(IBalanceFreezerShard.Error err) internal pure {
         if (err != IBalanceFreezerShard.Error.None) {
             if (err == IBalanceFreezerShard.Error.OperationAlreadyExecuted) revert AlreadyExecuted();
             revert ShardError(err);
@@ -330,24 +350,5 @@ contract BalanceFreezer is
         for (uint256 i = 0; i < _shards.length; i++) {
             _shards[i].upgradeTo(newShardImplementation);
         }
-    }
-
-    /**
-     * @inheritdoc IBalanceFreezer
-     *
-     * @dev Requirements:
-     *
-     * - The caller must have the {OWNER_ROLE} role.
-     */
-    function configureShardAdmin(address account, bool status) external onlyRole(OWNER_ROLE) {
-        if (account == address(0)) {
-            revert ZeroAccount();
-        }
-
-        for (uint256 i; i < _shards.length; i++) {
-            _shards[i].configureAdmin(account, status);
-        }
-
-        emit ShardAdminConfigured(account, status);
     }
 }

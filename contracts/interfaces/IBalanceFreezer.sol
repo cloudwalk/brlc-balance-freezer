@@ -41,8 +41,17 @@ interface IBalanceFreezer {
         bytes32 indexed txId
     );
 
-    /// @dev Emitted when a shard admin status of an account is configured.
-    event ShardAdminConfigured(address account, bool status);
+    /**
+     * @dev Emitted when a shard admin status of an account is configured on all underlying shard contracts.
+     * @param account The address of the account to configure.
+     * @param status The new admin status of the account.
+     * @param shardCounter The number of shard contracts on which the admin is configured.
+     */
+    event ShardAdminConfigured(
+        address indexed account,
+        bool status,
+        uint256 shardCounter
+    );
 
     /**
      * @dev Increases the frozen balance for an account.
@@ -92,7 +101,7 @@ interface IBalanceFreezer {
     ) external;
 
     /**
-     * @dev Configures the shard admin status of an account.
+     * @dev Configures the admin status for an account on all underlying shard contracts.
      * @param account The address of the account to configure.
      * @param status The new admin status of the account.
      */
