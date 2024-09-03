@@ -53,6 +53,12 @@ interface IBalanceFreezer {
         uint256 shardCounter
     );
 
+    /// @dev Emitted when a new shard is added to the contract.
+    event ShardAdded(address shard);
+
+    /// @dev Emitted when an existing shard is replaced with a new one.
+    event ShardReplaced(address newShard, address oldShard);
+
     /**
      * @dev Increases the frozen balance for an account.
      *
@@ -99,6 +105,19 @@ interface IBalanceFreezer {
         uint256 amount,
         bytes32 txId
     ) external;
+
+    /**
+     * @dev Sets the shards that are allowed to process operations.
+     * @param shards The array of shard addresses to add.
+     */
+    function addShards(address[] memory shards) external;
+
+    /**
+     * @dev Replaces the existing shards with a new set of shards.
+     * @param fromIndex The index in the internal array to start replacing from.
+     * @param shards The array of shard addresses to replace with.
+     */
+    function replaceShards(uint256 fromIndex, address[] memory shards) external;
 
     /**
      * @dev Configures the admin status for an account on all underlying shard contracts.

@@ -35,6 +35,9 @@ contract BalanceFreezer is
     /// @dev The role of freezer that is allowed to change and transfer the frozen balance of accounts.
     bytes32 public constant FREEZER_ROLE = keccak256("FREEZER_ROLE");
 
+    /// @dev The maximum number of shards.
+    uint256 private constant SHARD_COUNTER = 100;
+
     // ------------------ Errors ---------------------------------- //
 
     /// @dev Throws if the provided root address is zero.
@@ -57,6 +60,9 @@ contract BalanceFreezer is
 
     /// @dev Throws if a shard contract returns an error.
     error ShardError(IBalanceFreezerShard.Error err);
+
+    /// @dev Throws if the maximum number of shards is exceeded.
+    error ShardCountExcess();
 
     // ------------------ Initializers ---------------------------- //
 
@@ -240,6 +246,43 @@ contract BalanceFreezer is
 
         emit FrozenBalanceTransfer(from, to, amount, txId);
         emit FrozenBalanceChanged(from, newBalance, oldBalance, txId);
+    }
+
+    /**
+     * @inheritdoc IBalanceFreezer
+     *
+     * @dev Requirements:
+     *
+     * - The caller must have the {OWNER_ROLE} role.
+     * - The maximum number of shards if limited by SHARD_COUNTER.
+     */
+    function addShards(address[] memory shards) external onlyRole(OWNER_ROLE) {
+        if (_shards.length + shards.length > SHARD_COUNTER) {
+            revert ShardCountExcess();
+        }
+
+        for (uint256 i; i < shards.length; i++) {
+            _shards.push(IBalanceFreezerShard(shards[i]));
+            emit ShardAdded(shards[i]);
+        }
+    }
+
+    /**
+     * @inheritdoc IBalanceFreezer
+     *
+     * @dev Requirements:
+     *
+     * - The caller must have the {OWNER_ROLE} role.
+     */
+    function replaceShards(uint256 fromIndex, address[] memory shards) external onlyRole(OWNER_ROLE) {
+        uint256 len = shards.length;
+        for (uint256 i = 0; i < len; i++) {
+            uint256 k = fromIndex + i;
+            address oldShard = address(_shards[k]);
+            address newShard = shards[i];
+            _shards[k] = IBalanceFreezerShard(newShard);
+            emit ShardReplaced(newShard, oldShard);
+        }
     }
 
     /**
