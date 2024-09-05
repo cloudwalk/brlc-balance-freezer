@@ -5,18 +5,18 @@ pragma solidity ^0.8.0;
 /**
  * @title IBalanceFreezer interface
  * @author CloudWalk Inc.
- * @dev The interface of the contract that responsible for freezing operations.
+ * @dev The interface of the contract responsible for freezing operations on the underlying token contract.
  */
 interface IBalanceFreezer {
     /**
-     * @dev Emitted when the frozen balance of a specific account has been changed.
+     * @dev Emitted when the frozen balance of a specific account has been updated.
      *
      * @param account The account whose tokens have been frozen or unfrozen.
      * @param newFrozenBalance The updated frozen balance of the account.
      * @param oldFrozenBalance The previous frozen balance of the account.
-     * @param txId The off-chain ID of the transaction that caused the frozen balance change.
+     * @param txId The off-chain ID of the transaction that caused the frozen balance update.
      */
-    event FrozenBalanceChanged(
+    event FrozenBalanceUpdated(
         address indexed account,
         uint256 newFrozenBalance,
         uint256 oldFrozenBalance,
@@ -26,7 +26,7 @@ interface IBalanceFreezer {
     /**
      * @dev Emitted when frozen tokens have been transferred between accounts.
      *
-     * This event is accompanied by a corresponding event {FrozenBalanceChanged},
+     * This event is accompanied by a corresponding event {FrozenBalanceUpdated},
      * since the transfer reduces the frozen balance of the source account.
      *
      * @param from The account from which the frozen tokens have been transferred.
@@ -36,9 +36,9 @@ interface IBalanceFreezer {
      */
     event FrozenBalanceTransfer(
         address indexed from, // Tools: this comment prevents Prettier from formatting into a single line.
-        address indexed to,
         uint256 amount,
-        bytes32 indexed txId
+        bytes32 indexed txId,
+        address indexed to
     );
 
     /**
@@ -53,20 +53,35 @@ interface IBalanceFreezer {
         uint256 shardCounter
     );
 
-    /// @dev Emitted when a new shard is added to the contract.
+    /// @dev Emitted when a new shard contract is added to the contract.
     event ShardAdded(address shard);
 
-    /// @dev Emitted when an existing shard is replaced with a new one.
+    /// @dev Emitted when an existing shard contract is replaced with a new one.
     event ShardReplaced(address newShard, address oldShard);
 
     /**
-     * @dev Increases the frozen balance for an account.
+     * @dev Updates the frozen balance of an account.
      *
-     * Emits a {FrozenBalanceChanged} event.
+     * Emits a {FrozenBalanceUpdated} event.
+     *
+     * @param account The account to update the frozen balance for.
+     * @param amount The amount of tokens to set as the new frozen balance.
+     * @param txId The off-chain identifier of the balance frozen updating operation.
+     */
+    function freeze(
+        address account, // Tools: this comment prevents Prettier from formatting into a single line.
+        uint256 amount,
+        bytes32 txId
+    ) external;
+
+    /**
+     * @dev Increases the frozen balance of an account.
+     *
+     * Emits a {FrozenBalanceUpdated} event.
      *
      * @param account The account to increase frozen balance for.
      * @param amount The amount to increase the frozen balance by.
-     * @param txId The transaction ID of the balance frozen change.
+     * @param txId The off-chain identifier of the balance frozen updating operation.
      */
     function freezeIncrease(
         address account, // Tools: this comment prevents Prettier from formatting into a single line.
@@ -75,13 +90,13 @@ interface IBalanceFreezer {
     ) external;
 
     /**
-     * @dev Decreases the frozen balance for an account.
+     * @dev Decreases the frozen balance of an account.
      *
-     * Emits a {FrozenBalanceChanged} event.
+     * Emits a {FrozenBalanceUpdated} event.
      *
      * @param account The account to decrease frozen balance for.
      * @param amount The amount to decrease the frozen balance by.
-     * @param txId The transaction ID of the balance frozen change.
+     * @param txId The off-chain identifier of the balance frozen updating operation.
      */
     function freezeDecrease(
         address account, // Tools: this comment prevents Prettier from formatting into a single line.
@@ -97,7 +112,7 @@ interface IBalanceFreezer {
      * @param from The account tokens will be transferred from.
      * @param to The account tokens will be transferred to.
      * @param amount The amount of tokens to transfer.
-     * @param txId The transaction ID of the transfer.
+     * @param txId The off-chain identifier of the transfer operation.
      */
     function transferFrozen(
         address from, // Tools: this comment prevents Prettier from formatting into a single line.

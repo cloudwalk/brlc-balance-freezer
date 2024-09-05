@@ -7,11 +7,15 @@ import { IBalanceFreezerTypes } from "./IBalanceFreezerTypes.sol";
 /**
  * @title BalanceFreezer shard interface
  * @author CloudWalk Inc. (See https://www.cloudwalk.io)
- * @dev The interface of the contract that responsible for storing sharded frozen balance operations.
+ * @dev The interface of the contract responsible for sharded storage of data about freezing operations.
  */
 interface IBalanceFreezerShard is IBalanceFreezerTypes {
     /**
-     * @dev Enumeration of the shard contract possible errors.
+     * @dev Possible function errors of the shard contract.
+     *
+     * The values:
+     * - None = 0 ---------------------- There is no error. The function was executed successfully.
+     * - OperationAlreadyExecuted = 1 -- An operation with the provided transaction ID has been already executed.
      */
     enum Error {
         None,
@@ -20,15 +24,15 @@ interface IBalanceFreezerShard is IBalanceFreezerTypes {
 
     /**
      * @dev Emitted when an account is assigned the admin role.
-     * @param admin The address of the assigned admin.
+     * @param account The address of the assigned admin.
      */
-    event ShardAdminAssigned(address indexed admin);
+    event ShardAdminAssigned(address indexed account);
 
     /**
      * @dev Emitted when the admin role is revoked from an account.
-     * @param admin The address of the revoked admin.
+     * @param account The address of the revoked admin.
      */
-    event ShardAdminRevoked(address indexed admin);
+    event ShardAdminRevoked(address indexed account);
 
     /**
      * @dev Configure the admin status of an account.

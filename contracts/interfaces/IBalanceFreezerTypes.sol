@@ -9,21 +9,21 @@ pragma solidity ^0.8.0;
  */
 interface IBalanceFreezerTypes {
     /**
-     * @dev Possible statuses of a transfer frozen operation as an enum.
+     * @dev Possible statuses of a balance freezing operation.
      *
-     * The possible values:
+     * The values:
      *
-     * - Nonexistent ------ The operation does not exist (the default value).
-     * - TransferExecuted - The transfer operation was executed.
-     * - ChangeExecuted --- The change operation was executed.
+     * - Nonexistent = 0 ------ The operation does not exist (the default value).
+     * - TransferExecuted = 1 - The frozen balance transfer operation was executed.
+     * - UpdateExecuted = 2 --- The frozen balance update operation was executed.
      */
     enum OperationStatus {
-        Nonexistent,      // 0
-        TransferExecuted, // 1
-        ChangeExecuted    // 2
+        Nonexistent,
+        TransferExecuted,
+        UpdateExecuted
     }
 
-    /// @dev Structure with data of a single operation.
+    /// @dev Structure with data of a single freezing operation.
     struct Operation {
         OperationStatus status; // The status of the operation according to the {Status} enum.
         bytes32 txId;           // The off-chain identifier of the operation.

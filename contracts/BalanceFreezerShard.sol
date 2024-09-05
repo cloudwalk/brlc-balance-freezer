@@ -12,7 +12,7 @@ import { BalanceFreezerShardStorage } from "./BalanceFreezerShardStorage.sol";
 /**
  * @title BalanceFreezerShard contract
  * @author CloudWalk Inc. (See https://www.cloudwalk.io)
- * @dev The contract responsible for storing sharded operations.
+ * @dev The contract responsible for sharded storage of data about freezing operations.
  */
 contract BalanceFreezerShard is BalanceFreezerShardStorage, ContextUpgradeable, UUPSUpgradeable, IBalanceFreezerShard {
     // ------------------ Errors ---------------------------------- //
