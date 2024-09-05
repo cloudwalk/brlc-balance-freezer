@@ -20,6 +20,9 @@ contract BalanceFreezerShard is BalanceFreezerShardStorage, ContextUpgradeable, 
     /// @dev Throws if the caller is not an admin.
     error Unauthorized();
 
+    /// @dev Throws if the provided account address is zero.
+    error ZeroAccountAddress();
+
     // ------------------ Initializers ---------------------------- //
 
     /**
@@ -97,6 +100,13 @@ contract BalanceFreezerShard is BalanceFreezerShardStorage, ContextUpgradeable, 
     /**
      * @inheritdoc IBalanceFreezerShard
      */
+    function getOperation(bytes32 txId) external view returns (Operation memory) {
+        return _operations[txId];
+    }
+
+    /**
+     * @inheritdoc IBalanceFreezerShard
+     */
     function isAdmin(address account) external view returns (bool) {
         return _admins[account];
     }
@@ -107,6 +117,10 @@ contract BalanceFreezerShard is BalanceFreezerShardStorage, ContextUpgradeable, 
      * @dev Configures an admin internally
      */
     function _configureAdmin(address account, bool status) internal {
+        if (account == address(0)) {
+            revert ZeroAccountAddress();
+        }
+
         if (_admins[account] == status) {
             return;
         }

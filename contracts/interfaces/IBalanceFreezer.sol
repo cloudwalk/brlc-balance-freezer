@@ -2,12 +2,14 @@
 
 pragma solidity ^0.8.0;
 
+import { IBalanceFreezerTypes } from "./IBalanceFreezerTypes.sol";
+
 /**
  * @title IBalanceFreezer interface
  * @author CloudWalk Inc.
  * @dev The interface of the contract responsible for freezing operations on the underlying token contract.
  */
-interface IBalanceFreezer {
+interface IBalanceFreezer is IBalanceFreezerTypes {
     /**
      * @dev Emitted when the frozen balance of a specific account has been updated.
      *
@@ -142,6 +144,13 @@ interface IBalanceFreezer {
     function configureShardAdmin(address account, bool status) external;
 
     /**
+     * @dev Returns the data of a single freezing operation.
+     * @param txId The off-chain transaction identifier of the operation.
+     * @return operation The data of the freezing operation in the form of a structure.
+     */
+    function getOperation(bytes32 txId) external view returns (Operation memory operation);
+
+    /**
      * @dev Retrieves the frozen balance of an account.
      *
      * @param account The account to check the balance of.
@@ -153,4 +162,22 @@ interface IBalanceFreezer {
      * @dev Returns the address of the underlying token.
      */
     function underlyingToken() external view returns (address);
+
+    /**
+     * @dev Returns the number of shard contracts that is added to the root contract.
+     */
+    function getShardCounter() external view returns (uint256);
+
+    /**
+     * @dev Returns the shard contract address by the off-chain transaction identifier.
+     * @param txId The off-chain transaction identifier of the operation.
+     */
+    function getShardByTxId(bytes32 txId) external view returns (address);
+
+    /**
+     * @dev Returns the shard contract addresses by the start index in the internal array.
+     * @param index The start index of the shard contract in the internal array.
+     * @param limit The maximum number of returned shard contractss.
+     */
+    function getShardRange(uint256 index, uint256 limit) external view returns (address[] memory);
 }

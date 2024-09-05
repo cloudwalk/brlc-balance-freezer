@@ -264,6 +264,12 @@ contract BalanceFreezer is
     }
 
     // ------------------ View functions -------------------------- //
+    /**
+     * @inheritdoc IBalanceFreezer
+     */
+    function getOperation(bytes32 txId) external view returns (Operation memory) {
+        return _shard(txId).getOperation(txId);
+    }
 
     /**
      * @inheritdoc IBalanceFreezer
@@ -277,6 +283,42 @@ contract BalanceFreezer is
      */
     function underlyingToken() external view returns (address) {
         return _token;
+    }
+
+    /**
+     * @inheritdoc IBalanceFreezer
+     */
+    function getShardCounter() external view returns (uint256) {
+        return _shards.length;
+    }
+
+    /**
+     * @inheritdoc IBalanceFreezer
+     */
+    function getShardByTxId(bytes32 txId) external view returns (address) {
+        return address(_shard(txId));
+    }
+
+    /**
+     * @inheritdoc IBalanceFreezer
+     */
+    function getShardRange(uint256 index, uint256 limit) external view returns (address[] memory) {
+        uint256 len = _shards.length;
+        address[] memory shards;
+        if (len <= index || limit == 0) {
+            shards = new address[](0);
+        } else {
+            len -= index;
+            if (len > limit) {
+                len = limit;
+            }
+            shards = new address[](len);
+            for (uint256 i = 0; i < len; i++) {
+                shards[i] = address(_shards[index]);
+                index++;
+            }
+        }
+        return shards;
     }
 
     // ------------------ Internal functions ---------------------- //

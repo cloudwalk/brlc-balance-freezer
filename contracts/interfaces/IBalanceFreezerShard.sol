@@ -42,12 +42,19 @@ interface IBalanceFreezerShard is IBalanceFreezerTypes {
     function configureAdmin(address account, bool status) external;
 
     /**
-     * @dev Registers an operation.
+     * @dev Registers a freezing operation.
      * @param txId The off-chain identifier of the operation.
      * @param status The status of the operation.
      * @return err The error code if the operation fails, otherwise None.
      */
     function registerOperation(bytes32 txId, OperationStatus status) external returns (Error err);
+
+    /**
+     * @dev Returns the data of a single freezing operation.
+     * @param txId The off-chain transaction identifier of the operation.
+     * @return operation The data of the freezing operation in the form of a structure.
+     */
+    function getOperation(bytes32 txId) external view returns (Operation memory operation);
 
     /**
      * @dev Checks if an account is an admin.
