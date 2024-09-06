@@ -15,6 +15,7 @@ contract ERC20FreezableTokenMock is ERC20, IERC20Freezable {
     uint256 public constant OLD_FROZEN_BALANCE_MOCK = uint256(uint64(type(int64).max));
 
     // ------------------ Events ---------------------------------- //
+
     /// @dev A mock event with the parameters that were passed to the `freeze()` function.
     event MockCallFreeze(
         address account, // Tools: this comment prevents Prettier from formatting into a single line.

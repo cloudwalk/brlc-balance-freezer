@@ -1,15 +1,28 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
 
 import { IBalanceFreezerTypes } from "./IBalanceFreezerTypes.sol";
 
 /**
- * @title BalanceFreezer shard interface
+ * @title BalanceFreezerErrors interface
  * @author CloudWalk Inc. (See https://www.cloudwalk.io)
- * @dev The interface of the contract responsible for sharded storage of data about freezing operations.
+ * @dev Defines the custom errors used in the balance freezer shard contract.
  */
-interface IBalanceFreezerShard is IBalanceFreezerTypes {
+interface IBalanceFreezerShardErrors {
+    /// @dev Throws if the provided account address is zero.
+    error BalanceFreezerShard_AccountAddressZero();
+
+    /// @dev Throws if the caller is not an admin.
+    error BalanceFreezerShard_Unauthorized();
+}
+
+/**
+ * @title BalanceFreezerShardPrimary interface
+ * @author CloudWalk Inc. (See https://www.cloudwalk.io)
+ * @dev The primary interface of the contract responsible for sharded storage of data about freezing operations.
+ */
+interface IBalanceFreezerShardPrimary is IBalanceFreezerTypes {
     /**
      * @dev Possible function errors of the shard contract.
      *
@@ -22,24 +35,7 @@ interface IBalanceFreezerShard is IBalanceFreezerTypes {
         OperationAlreadyExecuted
     }
 
-    /**
-     * @dev Emitted when an account is assigned the admin role.
-     * @param account The address of the assigned admin.
-     */
-    event ShardAdminAssigned(address indexed account);
-
-    /**
-     * @dev Emitted when the admin role is revoked from an account.
-     * @param account The address of the revoked admin.
-     */
-    event ShardAdminRevoked(address indexed account);
-
-    /**
-     * @dev Configure the admin status of an account.
-     * @param account The address of the account to configure.
-     * @param status The admin status of the account.
-     */
-    function configureAdmin(address account, bool status) external;
+    // ------------------ Functions ------------------------------- //
 
     /**
      * @dev Registers a freezing operation.
@@ -62,6 +58,36 @@ interface IBalanceFreezerShard is IBalanceFreezerTypes {
      * @return operation The data of the freezing operation in the form of a structure.
      */
     function getOperation(bytes32 txId) external view returns (Operation memory operation);
+}
+
+/**
+ * @title BalanceFreezerShardConfiguration interface
+ * @author CloudWalk Inc. (See https://www.cloudwalk.io)
+ * @dev The configuration interface of the contract responsible for sharded storage of data about freezing operations.
+ */
+interface IBalanceFreezerShardConfiguration {
+    // ------------------ Events ---------------------------------- //
+
+    /**
+     * @dev Emitted when an account is assigned the admin role.
+     * @param account The address of the assigned admin.
+     */
+    event ShardAdminAssigned(address indexed account);
+
+    /**
+     * @dev Emitted when the admin role is revoked from an account.
+     * @param account The address of the revoked admin.
+     */
+    event ShardAdminRevoked(address indexed account);
+
+    // ------------------ Functions ------------------------------- //
+
+    /**
+     * @dev Configure the admin status of an account.
+     * @param account The address of the account to configure.
+     * @param status The admin status of the account.
+     */
+    function configureAdmin(address account, bool status) external;
 
     /**
      * @dev Checks if an account is an admin.
@@ -76,3 +102,13 @@ interface IBalanceFreezerShard is IBalanceFreezerTypes {
      */
     function upgradeTo(address newImplementation) external;
 }
+
+/**
+ * @title IBalanceFreezerShard interface
+ * @author CloudWalk Inc. (See https://www.cloudwalk.io)
+ * @dev The interface of the contract responsible for sharded storage of data about freezing operations.
+ */
+interface IBalanceFreezerShard is
+    IBalanceFreezerShardErrors,
+    IBalanceFreezerShardPrimary,
+    IBalanceFreezerShardConfiguration {}

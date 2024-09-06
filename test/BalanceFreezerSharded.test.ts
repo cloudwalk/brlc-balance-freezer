@@ -97,32 +97,33 @@ describe("Contracts 'BalanceFreezer' and `BalanceFreezerShard`", async () => {
   // Errors of the lib contracts
   const REVERT_ERROR_IF_CONTRACT_INITIALIZATION_IS_INVALID = "InvalidInitialization";
   const REVERT_ERROR_IF_CONTRACT_IS_PAUSED = "EnforcedPause";
-  const REVERT_ERROR_IF_UNAUTHORIZED = "Unauthorized";
   const REVERT_ERROR_IF_UNAUTHORIZED_ACCOUNT = "AccessControlUnauthorizedAccount";
 
   // Errors of the contracts under test
-  const REVERT_ERROR_IF_ROOT_ADDRESS_IS_ZERO = "ZeroRootAddress";
-  const REVERT_ERROR_IF_TX_ID_IS_ZERO = "ZeroTxId";
-  const REVERT_ERROR_IF_AMOUNT_EXCESS = "AmountExcess";
-  const REVERT_ERROR_IF_OPERATION_ALREADY_EXECUTED = "AlreadyExecuted";
-  const REVERT_ERROR_IF_SHARD_ADDRESS_IS_ZERO = "ZeroShardAddress";
-  const REVERT_ERROR_IF_TOKEN_ADDRESS_IS_ZERO = "ZeroTokenAddress";
-  const REVERT_ERROR_IF_ACCOUNT_ADDRESS_IS_ZERO = "ZeroAccountAddress";
-  const REVERT_ERROR_IF_SHARD_COUNTER_EXCESS = "ShardCounterExcess";
-  const REVERT_ERROR_IF_SHARD_REPLACEMENT_COUNTER_EXCESS = "ShardReplacementCounterExcess";
-  const REVERT_ERROR_IF_SHARD_ADMIN_ASSIGNED = "ShardAdminAssigned";
-  const REVERT_ERROR_IF_SHARD_ADMIN_REVOKED = "ShardAdminRevoked";
+  const REVERT_ERROR_IF_ACCOUNT_ADDRESS_IS_ZERO = "BalanceFreezer_AccountAddressZero";
+  const REVERT_ERROR_IF_ACCOUNT_ADDRESS_IS_ZERO_ON_SHARD = "BalanceFreezerShard_AccountAddressZero";
+  const REVERT_ERROR_IF_AMOUNT_EXCESS = "BalanceFreezer_AmountExcess";
+  const REVERT_ERROR_IF_OPERATION_ALREADY_EXECUTED = "BalanceFreezer_AlreadyExecuted";
+  const REVERT_ERROR_IF_ROOT_ADDRESS_IS_ZERO = "BalanceFreezer_RootAddressZero";
+  const REVERT_ERROR_IF_SHARD_ADDRESS_IS_ZERO = "BalanceFreezer_ShardAddressZero";
+  const REVERT_ERROR_IF_SHARD_COUNTER_EXCESS = "BalanceFreezer_ShardCounterExcess";
+  const REVERT_ERROR_IF_SHARD_REPLACEMENT_COUNTER_EXCESS = "BalanceFreezer_ShardReplacementCounterExcess";
+  const REVERT_ERROR_IF_TOKEN_ADDRESS_IS_ZERO = "BalanceFreezer_TokenAddressZero";
+  const REVERT_ERROR_IF_TX_ID_IS_ZERO = "BalanceFreezer_TxIdZero";
+  const REVERT_ERROR_IF_UNAUTHORIZED_ON_SHARD = "BalanceFreezerShard_Unauthorized";
 
   // Events of the contracts under test
-  const EVENT_NAME_SHARD_ADDED = "ShardAdded";
-  const EVENT_NAME_SHARD_ADMIN_CONFIGURED = "ShardAdminConfigured";
   const EVENT_NAME_FROZEN_BALANCE_TRANSFER = "FrozenBalanceTransfer";
   const EVENT_NAME_FROZEN_BALANCE_UPDATED = "FrozenBalanceUpdated";
   const EVENT_NAME_MOCK_CALL_FREEZE = "MockCallFreeze";
   const EVENT_NAME_MOCK_CALL_FREEZE_INCREASE = "MockCallFreezeIncrease";
   const EVENT_NAME_MOCK_CALL_FREEZE_DECREASE = "MockCallFreezeDecrease";
   const EVENT_NAME_MOCK_CALL_TRANSFER_FROZEN = "MockCallTransferFrozen";
-  const EVENT_NAME_SHAR_REPLACED = "ShardReplaced";
+  const EVENT_NAME_SHARD_ADDED = "ShardAdded";
+  const EVENT_NAME_SHARD_ADMIN_ASSIGNED = "ShardAdminAssigned";
+  const EVENT_NAME_SHARD_ADMIN_CONFIGURED = "ShardAdminConfigured";
+  const EVENT_NAME_SHARD_ADMIN_REVOKED = "ShardAdminRevoked";
+  const EVENT_NAME_SHARD_REPLACED = "ShardReplaced";
 
   let freezerRootFactory: ContractFactory;
   let freezerShardFactory: ContractFactory;
@@ -335,7 +336,7 @@ describe("Contracts 'BalanceFreezer' and `BalanceFreezerShard`", async () => {
 
       await expect(
         anotherFreezerShard.initialize(ADDRESS_ZERO)
-      ).to.be.revertedWithCustomError(freezerShardFactory, REVERT_ERROR_IF_ACCOUNT_ADDRESS_IS_ZERO);
+      ).to.be.revertedWithCustomError(freezerShardFactory, REVERT_ERROR_IF_ACCOUNT_ADDRESS_IS_ZERO_ON_SHARD);
     });
   });
 
@@ -362,7 +363,7 @@ describe("Contracts 'BalanceFreezer' and `BalanceFreezerShard`", async () => {
       const anotherFreezerShard: Contract = await upgrades.deployProxy(freezerShardFactory, [deployer.address]);
 
       await expect(connect(anotherFreezerShard, user).upgradeToAndCall(user.address, "0x"))
-        .to.be.revertedWithCustomError(anotherFreezerShard, REVERT_ERROR_IF_UNAUTHORIZED);
+        .to.be.revertedWithCustomError(anotherFreezerShard, REVERT_ERROR_IF_UNAUTHORIZED_ON_SHARD);
     });
   });
 
@@ -389,7 +390,7 @@ describe("Contracts 'BalanceFreezer' and `BalanceFreezerShard`", async () => {
       const anotherFreezerShard: Contract = await upgrades.deployProxy(freezerShardFactory, [deployer.address]);
 
       await expect(connect(anotherFreezerShard, user).upgradeTo(user.address))
-        .to.be.revertedWithCustomError(anotherFreezerShard, REVERT_ERROR_IF_UNAUTHORIZED);
+        .to.be.revertedWithCustomError(anotherFreezerShard, REVERT_ERROR_IF_UNAUTHORIZED_ON_SHARD);
     });
   });
 
@@ -452,15 +453,15 @@ describe("Contracts 'BalanceFreezer' and `BalanceFreezerShard`", async () => {
 
       // The empty array of addresses to replace
       const tx1 = await proveTx(freezerRoot.replaceShards(0, []));
-      expect(tx1).not.to.emit(freezerRoot, EVENT_NAME_SHAR_REPLACED);
+      expect(tx1).not.to.emit(freezerRoot, EVENT_NAME_SHARD_REPLACED);
 
       // The start index is outside the array of existing shards
       const tx2 = await proveTx(freezerRoot.replaceShards(oldShardAddresses.length, newShardAddresses));
-      expect(tx2).not.to.emit(freezerRoot, EVENT_NAME_SHAR_REPLACED);
+      expect(tx2).not.to.emit(freezerRoot, EVENT_NAME_SHARD_REPLACED);
 
       // Replacing the first shard address
       const tx3 = await proveTx(freezerRoot.replaceShards(0, [newShardAddresses[0]]));
-      expect(tx3).to.emit(freezerRoot, EVENT_NAME_SHAR_REPLACED).withArgs(
+      expect(tx3).to.emit(freezerRoot, EVENT_NAME_SHARD_REPLACED).withArgs(
         newShardAddresses[0],
         oldShardAddresses[0]
       );
@@ -469,11 +470,11 @@ describe("Contracts 'BalanceFreezer' and `BalanceFreezerShard`", async () => {
 
       // Replacing two shards in the middle
       const tx4 = await proveTx(freezerRoot.replaceShards(1, [newShardAddresses[1], newShardAddresses[2]]));
-      expect(tx4).to.emit(freezerRoot, EVENT_NAME_SHAR_REPLACED).withArgs(
+      expect(tx4).to.emit(freezerRoot, EVENT_NAME_SHARD_REPLACED).withArgs(
         oldShardAddresses[1],
         newShardAddresses[1]
       );
-      expect(tx4).to.emit(freezerRoot, EVENT_NAME_SHAR_REPLACED).withArgs(
+      expect(tx4).to.emit(freezerRoot, EVENT_NAME_SHARD_REPLACED).withArgs(
         oldShardAddresses[2],
         newShardAddresses[2]
       );
@@ -486,7 +487,7 @@ describe("Contracts 'BalanceFreezer' and `BalanceFreezerShard`", async () => {
       newShardAddresses.pop();
       const tx5 = await proveTx(freezerRoot.replaceShards(1, newShardAddresses));
       for (let i = 0; i < oldShardAddresses.length - 1; ++i) {
-        expect(tx5).to.emit(freezerRoot, EVENT_NAME_SHAR_REPLACED).withArgs(
+        expect(tx5).to.emit(freezerRoot, EVENT_NAME_SHARD_REPLACED).withArgs(
           oldShardAddresses[i],
           newShardAddresses[i]
         );
@@ -709,28 +710,28 @@ describe("Contracts 'BalanceFreezer' and `BalanceFreezerShard`", async () => {
       expect(await freezerShard.isAdmin(user.address)).to.eq(false);
       await expect(connect(freezerShard, shardAdmin).configureAdmin(user.address, true)).to.be.emit(
         freezerShard,
-        REVERT_ERROR_IF_SHARD_ADMIN_ASSIGNED
+        EVENT_NAME_SHARD_ADMIN_ASSIGNED
       ).withArgs(user.address);
       expect(await freezerShard.isAdmin(user.address)).to.eq(true);
 
       // Assign the same admin
       await expect(connect(freezerShard, shardAdmin).configureAdmin(user.address, true)).not.to.be.emit(
         freezerShard,
-        REVERT_ERROR_IF_SHARD_ADMIN_ASSIGNED
+        EVENT_NAME_SHARD_ADMIN_ASSIGNED
       );
       expect(await freezerShard.isAdmin(user.address)).to.eq(true);
 
       // Revoke the admin
       await expect(connect(freezerShard, shardAdmin).configureAdmin(user.address, false)).to.be.emit(
         freezerShard,
-        REVERT_ERROR_IF_SHARD_ADMIN_REVOKED
+        EVENT_NAME_SHARD_ADMIN_REVOKED
       ).withArgs(user.address);
       expect(await freezerShard.isAdmin(user.address)).to.eq(false);
 
       // Revoke the admin again
       await expect(connect(freezerShard, shardAdmin).configureAdmin(user.address, false)).not.to.be.emit(
         freezerShard,
-        REVERT_ERROR_IF_SHARD_ADMIN_REVOKED
+        EVENT_NAME_SHARD_ADMIN_REVOKED
       );
       expect(await freezerShard.isAdmin(user.address)).to.eq(false);
     });
@@ -741,7 +742,7 @@ describe("Contracts 'BalanceFreezer' and `BalanceFreezerShard`", async () => {
         connect(freezerShards[0], deployer).configureAdmin(user.address, true)
       ).to.be.revertedWithCustomError(
         freezerShards[0],
-        REVERT_ERROR_IF_UNAUTHORIZED
+        REVERT_ERROR_IF_UNAUTHORIZED_ON_SHARD
       );
     });
   });
@@ -1205,7 +1206,7 @@ describe("Contracts 'BalanceFreezer' and `BalanceFreezerShard`", async () => {
         operation.status,
         operation.account,
         operation.amount
-      )).to.be.revertedWithCustomError(freezerShards[0], REVERT_ERROR_IF_UNAUTHORIZED);
+      )).to.be.revertedWithCustomError(freezerShards[0], REVERT_ERROR_IF_UNAUTHORIZED_ON_SHARD);
     });
   });
 });

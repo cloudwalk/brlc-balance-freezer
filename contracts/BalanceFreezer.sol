@@ -2,17 +2,20 @@
 
 pragma solidity 0.8.24;
 
-import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
-import { AccessControlExtUpgradeable } from "./base/AccessControlExtUpgradeable.sol";
-import { PausableExtUpgradeable } from "./base/PausableExtUpgradeable.sol";
-import { RescuableUpgradeable } from "./base/RescuableUpgradeable.sol";
+import {AccessControlExtUpgradeable} from "./base/AccessControlExtUpgradeable.sol";
+import {PausableExtUpgradeable} from "./base/PausableExtUpgradeable.sol";
+import {RescuableUpgradeable} from "./base/RescuableUpgradeable.sol";
 
-import { IBalanceFreezer } from "./interfaces/IBalanceFreezer.sol";
-import { IBalanceFreezerShard } from "./interfaces/IBalanceFreezerShard.sol";
-import { IERC20Freezable } from "./interfaces/IERC20Freezable.sol";
+import {IBalanceFreezer} from "./interfaces/IBalanceFreezer.sol";
+import {IBalanceFreezerPrimary} from "./interfaces/IBalanceFreezer.sol";
+import {IBalanceFreezerConfiguration} from "./interfaces/IBalanceFreezer.sol";
+import {IBalanceFreezerShard} from "./interfaces/IBalanceFreezerShard.sol";
+import {IBalanceFreezerShardPrimary} from "./interfaces/IBalanceFreezerShard.sol";
+import {IERC20Freezable} from "./interfaces/IERC20Freezable.sol";
 
-import { BalanceFreezerStorage } from "./BalanceFreezerStorage.sol";
+import {BalanceFreezerStorage} from "./BalanceFreezerStorage.sol";
 
 /**
  * @title BalanceFreezer contract
@@ -22,12 +25,12 @@ import { BalanceFreezerStorage } from "./BalanceFreezerStorage.sol";
  * It stores data about the freezing operations using multiple linked shard contracts.
  */
 contract BalanceFreezer is
-    BalanceFreezerStorage,
-    AccessControlExtUpgradeable,
-    PausableExtUpgradeable,
-    RescuableUpgradeable,
-    UUPSUpgradeable,
-    IBalanceFreezer
+BalanceFreezerStorage,
+AccessControlExtUpgradeable,
+PausableExtUpgradeable,
+RescuableUpgradeable,
+UUPSUpgradeable,
+IBalanceFreezer
 {
     // ------------------ Constants ------------------------------- //
 
@@ -39,48 +42,6 @@ contract BalanceFreezer is
 
     /// @dev The maximum number of shards.
     uint256 public constant MAX_SHARD_COUNTER = 100;
-
-    // ------------------ Errors ---------------------------------- //
-
-    /// @dev Throws if the provided root address is zero.
-    error ZeroRootAddress();
-
-    /// @dev Throws if the provided shard address is zero.
-    error ZeroShardAddress();
-
-    /// @dev Thrown if the provided token address is zero.
-    error ZeroTokenAddress();
-
-    /// @dev Throws if the provided account address is zero.
-    error ZeroAccountAddress();
-
-    /**
-     * @dev Thrown if the provided amount exceeds the maximum allowed value.
-     * @param amount The provided amount.
-     */
-    error AmountExcess(uint256 amount);
-
-    /// @dev Thrown if the provided off-chain transaction identifier is zero.
-    error ZeroTxId();
-
-    /**
-     * @dev Thrown if the operation with the provided `txId` is already executed.
-     * @param txId The provided off-chain transaction identifier of the related operation.
-     */
-    error AlreadyExecuted(bytes32 txId);
-
-    /**
-     * @dev Throws if a shard contract returns an error.
-     * @param err The error code according to the {IBalanceFreezerShard.Error} enum.
-     * @param txId The provided off-chain transaction identifier of the related operation.
-     */
-    error ShardError(uint256 err, bytes32 txId);
-
-    /// @dev Thrown if the number of shards during their adding exceeds the allowed maximum.
-    error ShardCounterExcess();
-
-    /// @dev Thrown if the number of shards to replace is greater than expected.
-    error ShardReplacementCounterExcess();
 
     // ------------------ Initializers ---------------------------- //
 
@@ -128,7 +89,7 @@ contract BalanceFreezer is
      */
     function __BalanceFreezer_init_init_unchained(address token_) internal onlyInitializing {
         if (token_ == address(0)) {
-            revert ZeroTokenAddress();
+            revert BalanceFreezer_TokenAddressZero();
         }
 
         _token = token_;
@@ -141,7 +102,7 @@ contract BalanceFreezer is
     // ------------------ Functions ------------------------------- //
 
     /**
-     * @inheritdoc IBalanceFreezer
+     * @inheritdoc IBalanceFreezerPrimary
      *
      * @dev Requirements:
      *
@@ -161,7 +122,7 @@ contract BalanceFreezer is
     }
 
     /**
-     * @inheritdoc IBalanceFreezer
+     * @inheritdoc IBalanceFreezerPrimary
      *
      * @dev Requirements:
      *
@@ -181,7 +142,7 @@ contract BalanceFreezer is
     }
 
     /**
-     * @inheritdoc IBalanceFreezer
+     * @inheritdoc IBalanceFreezerPrimary
      *
      * @dev Requirements:
      *
@@ -201,7 +162,7 @@ contract BalanceFreezer is
     }
 
     /**
-     * @inheritdoc IBalanceFreezer
+     * @inheritdoc IBalanceFreezerPrimary
      *
      * @dev Requirements:
      *
@@ -223,7 +184,7 @@ contract BalanceFreezer is
     }
 
     /**
-     * @inheritdoc IBalanceFreezer
+     * @inheritdoc IBalanceFreezerConfiguration
      *
      * @dev Requirements:
      *
@@ -232,7 +193,7 @@ contract BalanceFreezer is
      */
     function addShards(address[] memory shards) external onlyRole(OWNER_ROLE) {
         if (_shards.length + shards.length > MAX_SHARD_COUNTER) {
-            revert ShardCounterExcess();
+            revert BalanceFreezer_ShardCounterExcess();
         }
 
         for (uint256 i; i < shards.length; i++) {
@@ -242,7 +203,7 @@ contract BalanceFreezer is
     }
 
     /**
-     * @inheritdoc IBalanceFreezer
+     * @inheritdoc IBalanceFreezerConfiguration
      *
      * @dev Requirements:
      *
@@ -255,7 +216,7 @@ contract BalanceFreezer is
         }
         len -= fromIndex;
         if (len < shards.length) {
-            revert ShardReplacementCounterExcess();
+            revert BalanceFreezer_ShardReplacementCounterExcess();
         }
         if (len > shards.length) {
             len = shards.length;
@@ -270,7 +231,7 @@ contract BalanceFreezer is
     }
 
     /**
-     * @inheritdoc IBalanceFreezer
+     * @inheritdoc IBalanceFreezerConfiguration
      *
      * @dev Requirements:
      *
@@ -278,7 +239,7 @@ contract BalanceFreezer is
      */
     function configureShardAdmin(address account, bool status) external onlyRole(OWNER_ROLE) {
         if (account == address(0)) {
-            revert ZeroAccountAddress();
+            revert BalanceFreezer_AccountAddressZero();
         }
 
         uint256 shardCounter = _shards.length;
@@ -291,42 +252,42 @@ contract BalanceFreezer is
 
     // ------------------ View functions -------------------------- //
     /**
-     * @inheritdoc IBalanceFreezer
+     * @inheritdoc IBalanceFreezerPrimary
      */
     function getOperation(bytes32 txId) external view returns (Operation memory) {
         return _shard(txId).getOperation(txId);
     }
 
     /**
-     * @inheritdoc IBalanceFreezer
+     * @inheritdoc IBalanceFreezerPrimary
      */
     function balanceOfFrozen(address account) public view returns (uint256) {
         return IERC20Freezable(_token).balanceOfFrozen(account);
     }
 
     /**
-     * @inheritdoc IBalanceFreezer
+     * @inheritdoc IBalanceFreezerPrimary
      */
     function underlyingToken() external view returns (address) {
         return _token;
     }
 
     /**
-     * @inheritdoc IBalanceFreezer
+     * @inheritdoc IBalanceFreezerConfiguration
      */
     function getShardCounter() external view returns (uint256) {
         return _shards.length;
     }
 
     /**
-     * @inheritdoc IBalanceFreezer
+     * @inheritdoc IBalanceFreezerConfiguration
      */
     function getShardByTxId(bytes32 txId) external view returns (address) {
         return address(_shard(txId));
     }
 
     /**
-     * @inheritdoc IBalanceFreezer
+     * @inheritdoc IBalanceFreezerConfiguration
      */
     function getShardRange(uint256 index, uint256 limit) external view returns (address[] memory) {
         uint256 len = _shards.length;
@@ -358,17 +319,19 @@ contract BalanceFreezer is
         uint256 amount
     ) internal {
         if (txId == 0) {
-            revert ZeroTxId();
+            revert BalanceFreezer_TxIdZero();
         }
         if (amount > type(uint64).max) {
-            revert AmountExcess(amount);
+            revert BalanceFreezer_AmountExcess(amount);
         }
 
         IBalanceFreezerShard.Error err = _shard(txId).registerOperation(txId, status, account, uint64(amount));
 
-        if (err != IBalanceFreezerShard.Error.None) {
-            if (err == IBalanceFreezerShard.Error.OperationAlreadyExecuted) revert AlreadyExecuted(txId);
-            revert ShardError(uint256(err), txId);
+        if (err != IBalanceFreezerShardPrimary.Error.None) {
+            if (err == IBalanceFreezerShardPrimary.Error.OperationAlreadyExecuted) {
+                revert BalanceFreezer_AlreadyExecuted(txId);
+            }
+            revert BalanceFreezer_ShardError(uint256(err), txId);
         }
     }
 
@@ -406,7 +369,7 @@ contract BalanceFreezer is
      */
     function upgradeShardsTo(address newImplementation) external onlyRole(OWNER_ROLE) {
         if (newImplementation == address(0)) {
-            revert ZeroShardAddress();
+            revert BalanceFreezer_ShardAddressZero();
         }
 
         for (uint256 i = 0; i < _shards.length; i++) {
@@ -421,10 +384,10 @@ contract BalanceFreezer is
      */
     function upgradeRootAndShardsTo(address newRootImplementation, address newShardImplementation) external {
         if (newRootImplementation == address(0)) {
-            revert ZeroRootAddress();
+            revert BalanceFreezer_RootAddressZero();
         }
         if (newShardImplementation == address(0)) {
-            revert ZeroShardAddress();
+            revert BalanceFreezer_ShardAddressZero();
         }
 
         upgradeToAndCall(newRootImplementation, "");

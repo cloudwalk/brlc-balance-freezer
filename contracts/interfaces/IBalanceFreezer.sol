@@ -1,15 +1,64 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
 
 import { IBalanceFreezerTypes } from "./IBalanceFreezerTypes.sol";
 
 /**
- * @title IBalanceFreezer interface
- * @author CloudWalk Inc.
- * @dev The interface of the contract responsible for freezing operations on the underlying token contract.
+ * @title IBalanceFreezerErrors interface
+ * @author CloudWalk Inc. (See https://cloudwalk.io)
+ * @dev Defines the custom errors used in the balance freezer contract.
  */
-interface IBalanceFreezer is IBalanceFreezerTypes {
+interface IBalanceFreezerErrors {
+    /// @dev Throws if the provided account address is zero.
+    error BalanceFreezer_AccountAddressZero();
+
+    /**
+     * @dev Thrown if the operation with the provided `txId` is already executed.
+     * @param txId The provided off-chain transaction identifier of the related operation.
+     */
+    error BalanceFreezer_AlreadyExecuted(bytes32 txId);
+
+    /**
+     * @dev Thrown if the provided amount exceeds the maximum allowed value.
+     * @param amount The provided amount.
+     */
+    error BalanceFreezer_AmountExcess(uint256 amount);
+
+    /// @dev Throws if the provided root address is zero.
+    error BalanceFreezer_RootAddressZero();
+
+    /// @dev Throws if the provided shard address is zero.
+    error BalanceFreezer_ShardAddressZero();
+
+    /// @dev Thrown if the number of shards during their adding exceeds the allowed maximum.
+    error BalanceFreezer_ShardCounterExcess();
+
+    /**
+     * @dev Throws if a shard contract returns an error.
+     * @param err The error code according to the {IBalanceFreezerShard.Error} enum.
+     * @param txId The provided off-chain transaction identifier of the related operation.
+     */
+    error BalanceFreezer_ShardError(uint256 err, bytes32 txId);
+
+    /// @dev Thrown if the number of shards to replace is greater than expected.
+    error BalanceFreezer_ShardReplacementCounterExcess();
+
+    /// @dev Thrown if the provided token address is zero.
+    error BalanceFreezer_TokenAddressZero();
+
+    /// @dev Thrown if the provided off-chain transaction identifier is zero.
+    error BalanceFreezer_TxIdZero();
+}
+
+/**
+ * @title IBalanceFreezerPrimary interface
+ * @author CloudWalk Inc. (See https://cloudwalk.io)
+ * @dev The primary interface of the contract responsible for freezing operations on the underlying token contract.
+ */
+interface IBalanceFreezerPrimary is IBalanceFreezerTypes {
+    // ------------------ Events ---------------------------------- //
+
     /**
      * @dev Emitted when the frozen balance of a specific account has been updated.
      *
@@ -45,23 +94,7 @@ interface IBalanceFreezer is IBalanceFreezerTypes {
         address indexed to
     );
 
-    /**
-     * @dev Emitted when a shard admin status of an account is configured on all underlying shard contracts.
-     * @param account The address of the account to configure.
-     * @param status The new admin status of the account.
-     * @param shardCounter The number of shard contracts on which the admin is configured.
-     */
-    event ShardAdminConfigured(
-        address indexed account, // Tools: this comment prevents Prettier from formatting into a single line.
-        bool status,
-        uint256 shardCounter
-    );
-
-    /// @dev Emitted when a new shard contract is added to the contract.
-    event ShardAdded(address shard);
-
-    /// @dev Emitted when an existing shard contract is replaced with a new one.
-    event ShardReplaced(address newShard, address oldShard);
+    // ------------------ Functions ------------------------------- //
 
     /**
      * @dev Updates the frozen balance of an account.
@@ -126,6 +159,62 @@ interface IBalanceFreezer is IBalanceFreezerTypes {
     ) external;
 
     /**
+     * @dev Returns the data of a single freezing operation.
+     * @param txId The off-chain transaction identifier of the operation.
+     * @return operation The data of the freezing operation in the form of a structure.
+     */
+    function getOperation(bytes32 txId) external view returns (Operation memory operation);
+
+    /**
+     * @dev Retrieves the frozen balance of an account.
+     *
+     * @param account The account to check the balance of.
+     * @return The amount of tokens that are frozen for the account.
+     */
+    function balanceOfFrozen(address account) external view returns (uint256);
+
+    /**
+     * @dev Returns the address of the underlying token.
+     */
+    function underlyingToken() external view returns (address);
+}
+
+/**
+ * @title IBalanceFreezerConfiguration interface
+ * @author CloudWalk Inc. (See https://cloudwalk.io)
+ * @dev The configuration interface of the contract responsible for freezing operations.
+ */
+interface IBalanceFreezerConfiguration {
+    // ------------------ Events ---------------------------------- //
+
+    /**
+     * @dev Emitted when a shard admin status of an account is configured on all underlying shard contracts.
+     * @param account The address of the account to configure.
+     * @param status The new admin status of the account.
+     * @param shardCounter The number of shard contracts on which the admin is configured.
+     */
+    event ShardAdminConfigured(
+        address indexed account, // Tools: this comment prevents Prettier from formatting into a single line.
+        bool status,
+        uint256 shardCounter
+    );
+
+    /**
+     * @dev Emitted when a new shard contract is added to the contract.
+     * @param shard The address of the added shard contract.
+     */
+    event ShardAdded(address shard);
+
+    /**
+     * @dev Emitted when an existing shard contract is replaced with a new one.
+     * @param newShard The address of the new shard contract.
+     * @param oldShard The address of the replaced shard contract.
+     */
+    event ShardReplaced(address newShard, address oldShard);
+
+    // ------------------ Functions ------------------------------- //
+
+    /**
      * @dev Sets the shards that are allowed to process operations.
      * @param shards The array of shard addresses to add.
      */
@@ -146,26 +235,6 @@ interface IBalanceFreezer is IBalanceFreezerTypes {
     function configureShardAdmin(address account, bool status) external;
 
     /**
-     * @dev Returns the data of a single freezing operation.
-     * @param txId The off-chain transaction identifier of the operation.
-     * @return operation The data of the freezing operation in the form of a structure.
-     */
-    function getOperation(bytes32 txId) external view returns (Operation memory operation);
-
-    /**
-     * @dev Retrieves the frozen balance of an account.
-     *
-     * @param account The account to check the balance of.
-     * @return The amount of tokens that are frozen for the account.
-     */
-    function balanceOfFrozen(address account) external view returns (uint256);
-
-    /**
-     * @dev Returns the address of the underlying token.
-     */
-    function underlyingToken() external view returns (address);
-
-    /**
      * @dev Returns the number of shard contracts that is added to the root contract.
      */
     function getShardCounter() external view returns (uint256);
@@ -179,7 +248,14 @@ interface IBalanceFreezer is IBalanceFreezerTypes {
     /**
      * @dev Returns the shard contract addresses by the start index in the internal array.
      * @param index The start index of the shard contract in the internal array.
-     * @param limit The maximum number of returned shard contractss.
+     * @param limit The maximum number of returned shard contracts.
      */
     function getShardRange(uint256 index, uint256 limit) external view returns (address[] memory);
 }
+
+/**
+ * @title IBalanceFreezer interface
+ * @author CloudWalk Inc. (See https://cloudwalk.io)
+ * @dev The interface of the contract responsible for freezing operations on the underlying token contract.
+ */
+interface IBalanceFreezer is IBalanceFreezerErrors, IBalanceFreezerPrimary, IBalanceFreezerConfiguration {}

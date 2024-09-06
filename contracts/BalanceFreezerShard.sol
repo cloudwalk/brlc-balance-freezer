@@ -6,6 +6,8 @@ import { ContextUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/Co
 import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
 import { IBalanceFreezerShard } from "./interfaces/IBalanceFreezerShard.sol";
+import { IBalanceFreezerShardPrimary } from "./interfaces/IBalanceFreezerShard.sol";
+import { IBalanceFreezerShardConfiguration } from "./interfaces/IBalanceFreezerShard.sol";
 
 import { BalanceFreezerShardStorage } from "./BalanceFreezerShardStorage.sol";
 
@@ -15,14 +17,6 @@ import { BalanceFreezerShardStorage } from "./BalanceFreezerShardStorage.sol";
  * @dev The contract responsible for sharded storage of data about freezing operations.
  */
 contract BalanceFreezerShard is BalanceFreezerShardStorage, ContextUpgradeable, UUPSUpgradeable, IBalanceFreezerShard {
-    // ------------------ Errors ---------------------------------- //
-
-    /// @dev Throws if the caller is not an admin.
-    error Unauthorized();
-
-    /// @dev Throws if the provided account address is zero.
-    error ZeroAccountAddress();
-
     // ------------------ Initializers ---------------------------- //
 
     /**
@@ -65,7 +59,7 @@ contract BalanceFreezerShard is BalanceFreezerShardStorage, ContextUpgradeable, 
 
     modifier onlyAdmin() {
         if (!_admins[msg.sender]) {
-            revert Unauthorized();
+            revert BalanceFreezerShard_Unauthorized();
         }
         _;
     }
@@ -73,7 +67,7 @@ contract BalanceFreezerShard is BalanceFreezerShardStorage, ContextUpgradeable, 
     // ----------------------- Functions -------------------------- //
 
     /**
-     * @inheritdoc IBalanceFreezerShard
+     * @inheritdoc IBalanceFreezerShardPrimary
      *
      * @dev Requirements:
      *
@@ -99,7 +93,7 @@ contract BalanceFreezerShard is BalanceFreezerShardStorage, ContextUpgradeable, 
     }
 
     /**
-     * @inheritdoc IBalanceFreezerShard
+     * @inheritdoc IBalanceFreezerShardConfiguration
      */
     function configureAdmin(address account, bool status) external onlyAdmin {
         _configureAdmin(account, status);
@@ -108,14 +102,14 @@ contract BalanceFreezerShard is BalanceFreezerShardStorage, ContextUpgradeable, 
     // ------------------ View functions -------------------------- //
 
     /**
-     * @inheritdoc IBalanceFreezerShard
+     * @inheritdoc IBalanceFreezerShardPrimary
      */
     function getOperation(bytes32 txId) external view returns (Operation memory) {
         return _operations[txId];
     }
 
     /**
-     * @inheritdoc IBalanceFreezerShard
+     * @inheritdoc IBalanceFreezerShardConfiguration
      */
     function isAdmin(address account) external view returns (bool) {
         return _admins[account];
@@ -128,7 +122,7 @@ contract BalanceFreezerShard is BalanceFreezerShardStorage, ContextUpgradeable, 
      */
     function _configureAdmin(address account, bool status) internal {
         if (account == address(0)) {
-            revert ZeroAccountAddress();
+            revert BalanceFreezerShard_AccountAddressZero();
         }
 
         if (_admins[account] == status) {
