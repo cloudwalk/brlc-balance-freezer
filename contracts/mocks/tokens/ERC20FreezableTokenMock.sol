@@ -12,7 +12,7 @@ import { IERC20Freezable } from "../../interfaces/IERC20Freezable.sol";
  * @dev An implementation of the {ERC20Upgradeable} contract for testing purposes.
  */
 contract ERC20FreezableTokenMock is ERC20, IERC20Freezable {
-    uint256 public constant OLD_FROZEN_BALANCE_MOCK = uint256(type(int256).max);
+    uint256 public constant OLD_FROZEN_BALANCE_MOCK = uint256(uint64(type(int64).max));
 
     // ------------------ Events ---------------------------------- //
     /// @dev A mock event with the parameters that were passed to the `freeze()` function.
@@ -107,7 +107,11 @@ contract ERC20FreezableTokenMock is ERC20, IERC20Freezable {
         uint256 amount
     ) external returns (uint256 newBalance, uint256 oldBalance) {
         oldBalance = OLD_FROZEN_BALANCE_MOCK;
-        newBalance = oldBalance - amount;
+        if (amount > oldBalance) {
+            newBalance = 0;
+        } else {
+            newBalance = oldBalance - amount;
+        }
         emit MockCallFreezeIncrease(account, amount);
     }
 
@@ -126,7 +130,11 @@ contract ERC20FreezableTokenMock is ERC20, IERC20Freezable {
         uint256 amount
     ) external returns (uint256 newBalance, uint256 oldBalance) {
         oldBalance = OLD_FROZEN_BALANCE_MOCK;
-        newBalance = oldBalance - amount;
+        if (amount > oldBalance) {
+            newBalance = 0;
+        } else {
+            newBalance = oldBalance - amount;
+        }
         emit MockCallTransferFrozen(from, to, amount);
     }
 
@@ -137,7 +145,6 @@ contract ERC20FreezableTokenMock is ERC20, IERC20Freezable {
      * @return The amount of tokens that are frozen for the account.
      */
     function balanceOfFrozen(address account) external pure returns (uint256) {
-        account; // Prevents compiler warning about unused variable
-        return OLD_FROZEN_BALANCE_MOCK;
+        return OLD_FROZEN_BALANCE_MOCK + uint256(uint160(account));
     }
 }
