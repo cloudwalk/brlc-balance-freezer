@@ -52,7 +52,7 @@ interface IBalanceFreezer is IBalanceFreezerTypes {
      * @param shardCounter The number of shard contracts on which the admin is configured.
      */
     event ShardAdminConfigured(
-        address indexed account,
+        address indexed account, // Tools: this comment prevents Prettier from formatting into a single line.
         bool status,
         uint256 shardCounter
     );
