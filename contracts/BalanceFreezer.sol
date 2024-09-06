@@ -79,6 +79,9 @@ contract BalanceFreezer is
     /// @dev Thrown if the number of shards during their adding exceeds the allowed maximum.
     error ShardCounterExcess();
 
+    /// @dev Thrown if the number of shards to replace is greater than expected.
+    error ShardReplacementCounterExcess();
+
     // ------------------ Initializers ---------------------------- //
 
     /**
@@ -246,7 +249,17 @@ contract BalanceFreezer is
      * - The caller must have the {OWNER_ROLE} role.
      */
     function replaceShards(uint256 fromIndex, address[] memory shards) external onlyRole(OWNER_ROLE) {
-        uint256 len = shards.length;
+        uint256 len = _shards.length;
+        if (fromIndex >= len) {
+            return;
+        }
+        len -= fromIndex;
+        if (len < shards.length) {
+            revert ShardReplacementCounterExcess();
+        }
+        if (len > shards.length) {
+            len = shards.length;
+        }
         for (uint256 i = 0; i < len; i++) {
             uint256 k = fromIndex + i;
             address oldShard = address(_shards[k]);
