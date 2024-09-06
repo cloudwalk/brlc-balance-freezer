@@ -45,9 +45,16 @@ interface IBalanceFreezerShard is IBalanceFreezerTypes {
      * @dev Registers a freezing operation.
      * @param txId The off-chain identifier of the operation.
      * @param status The status of the operation.
+     * @param account The address of the account whose frozen balance is updated or transferred from.
+     * @param amount The amount parameter of the related operation.
      * @return err The error code if the operation fails, otherwise None.
      */
-    function registerOperation(bytes32 txId, OperationStatus status) external returns (Error err);
+    function registerOperation(
+        bytes32 txId,
+        OperationStatus status,
+        address account,
+        uint64 amount
+    ) external returns (Error err);
 
     /**
      * @dev Returns the data of a single freezing operation.

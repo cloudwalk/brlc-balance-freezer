@@ -54,14 +54,27 @@ contract BalanceFreezer is
     /// @dev Throws if the provided account address is zero.
     error ZeroAccountAddress();
 
+    /**
+     * @dev Thrown if the provided amount exceeds the maximum allowed value.
+     * @param amount The provided amount.
+     */
+    error AmountExcess(uint256 amount);
+
     /// @dev Thrown if the provided off-chain transaction identifier is zero.
     error ZeroTxId();
 
-    /// @dev Thrown if the operation with the provided `txId` is already executed.
-    error AlreadyExecuted();
+    /**
+     * @dev Thrown if the operation with the provided `txId` is already executed.
+     * @param txId The provided off-chain transaction identifier of the related operation.
+     */
+    error AlreadyExecuted(bytes32 txId);
 
-    /// @dev Throws if a shard contract returns an error.
-    error ShardError(IBalanceFreezerShard.Error err);
+    /**
+     * @dev Throws if a shard contract returns an error.
+     * @param err The error code according to the {IBalanceFreezerShard.Error} enum.
+     * @param txId The provided off-chain transaction identifier of the related operation.
+     */
+    error ShardError(uint256 err, bytes32 txId);
 
     /// @dev Thrown if the number of shards during their adding exceeds the allowed maximum.
     error ShardCounterExcess();
@@ -131,7 +144,7 @@ contract BalanceFreezer is
      *
      * - The contract must not be paused.
      * - The caller must have the {FREEZER_ROLE} role.
-     * - The transaction ID must not be zero.
+     * - The transaction identifier must not be zero.
      * - The requirements of the related token contract function must be met.
      */
     function freeze(
@@ -139,7 +152,7 @@ contract BalanceFreezer is
         uint256 amount,
         bytes32 txId
     ) external whenNotPaused onlyRole(FREEZER_ROLE) {
-        _checkAndRegisterOperation(txId, OperationStatus.UpdateExecuted);
+        _checkAndRegisterOperation(txId, OperationStatus.UpdateReplacementExecuted, account, amount);
         (uint256 newBalance, uint256 oldBalance) = IERC20Freezable(_token).freeze(account, amount);
         emit FrozenBalanceUpdated(account, newBalance, oldBalance, txId);
     }
@@ -151,7 +164,7 @@ contract BalanceFreezer is
      *
      * - The contract must not be paused.
      * - The caller must have the {FREEZER_ROLE} role.
-     * - The transaction ID must not be zero.
+     * - The transaction identifier must not be zero.
      * - The requirements of the related token contract function must be met.
      */
     function freezeIncrease(
@@ -159,7 +172,7 @@ contract BalanceFreezer is
         uint256 amount,
         bytes32 txId
     ) external whenNotPaused onlyRole(FREEZER_ROLE) {
-        _checkAndRegisterOperation(txId, OperationStatus.UpdateExecuted);
+        _checkAndRegisterOperation(txId, OperationStatus.UpdateIncreaseExecuted, account, amount);
         (uint256 newBalance, uint256 oldBalance) = IERC20Freezable(_token).freezeIncrease(account, amount);
         emit FrozenBalanceUpdated(account, newBalance, oldBalance, txId);
     }
@@ -171,7 +184,7 @@ contract BalanceFreezer is
      *
      * - The contract must not be paused.
      * - The caller must have the {FREEZER_ROLE} role.
-     * - The transaction ID must not be zero.
+     * - The transaction identifier must not be zero.
      * - The requirements of the related token contract function must be met.
      */
     function freezeDecrease(
@@ -179,7 +192,7 @@ contract BalanceFreezer is
         uint256 amount,
         bytes32 txId
     ) external whenNotPaused onlyRole(FREEZER_ROLE) {
-        _checkAndRegisterOperation(txId, OperationStatus.UpdateExecuted);
+        _checkAndRegisterOperation(txId, OperationStatus.UpdateDecreaseExecuted, account, amount);
         (uint256 newBalance, uint256 oldBalance) = IERC20Freezable(_token).freezeDecrease(account, amount);
         emit FrozenBalanceUpdated(account, newBalance, oldBalance, txId);
     }
@@ -191,7 +204,7 @@ contract BalanceFreezer is
      *
      * - The contract must not be paused.
      * - The caller must have the {FREEZER_ROLE} role.
-     * - The transaction ID must not be zero.
+     * - The transaction identifier must not be zero.
      * - The requirements of the related token contract function must be met.
      */
     function transferFrozen(
@@ -200,7 +213,7 @@ contract BalanceFreezer is
         uint256 amount,
         bytes32 txId
     ) public virtual whenNotPaused onlyRole(FREEZER_ROLE) {
-        _checkAndRegisterOperation(txId, OperationStatus.TransferExecuted);
+        _checkAndRegisterOperation(txId, OperationStatus.TransferExecuted, from, amount);
         (uint256 newBalance, uint256 oldBalance) = IERC20Freezable(_token).transferFrozen(from, to, amount);
         emit FrozenBalanceTransfer(from, amount, txId, to);
         emit FrozenBalanceUpdated(from, newBalance, oldBalance, txId);
@@ -325,16 +338,24 @@ contract BalanceFreezer is
     /**
      * @dev Checks a shard error and reverts if necessary.
      */
-    function _checkAndRegisterOperation(bytes32 txId, OperationStatus status) internal {
+    function _checkAndRegisterOperation(
+        bytes32 txId,
+        OperationStatus status,
+        address account,
+        uint256 amount
+    ) internal {
         if (txId == 0) {
             revert ZeroTxId();
         }
+        if (amount > type(uint64).max) {
+            revert AmountExcess(amount);
+        }
 
-        IBalanceFreezerShard.Error err = _shard(txId).registerOperation(txId, status);
+        IBalanceFreezerShard.Error err = _shard(txId).registerOperation(txId, status, account, uint64(amount));
 
         if (err != IBalanceFreezerShard.Error.None) {
-            if (err == IBalanceFreezerShard.Error.OperationAlreadyExecuted) revert AlreadyExecuted();
-            revert ShardError(err);
+            if (err == IBalanceFreezerShard.Error.OperationAlreadyExecuted) revert AlreadyExecuted(txId);
+            revert ShardError(uint256(err), txId);
         }
     }
 

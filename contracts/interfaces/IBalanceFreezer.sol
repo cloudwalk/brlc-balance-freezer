@@ -13,10 +13,12 @@ interface IBalanceFreezer is IBalanceFreezerTypes {
     /**
      * @dev Emitted when the frozen balance of a specific account has been updated.
      *
-     * @param account The account whose tokens have been frozen or unfrozen.
+     * The balance update can happen due to a related update operation or because of a transfer operation.
+     *
+     * @param account The account whose frozen balance has been updated.
      * @param newFrozenBalance The updated frozen balance of the account.
      * @param oldFrozenBalance The previous frozen balance of the account.
-     * @param txId The off-chain ID of the transaction that caused the frozen balance update.
+     * @param txId The off-chain identifier of the transaction that caused the frozen balance update.
      */
     event FrozenBalanceUpdated(
         address indexed account,
@@ -26,7 +28,7 @@ interface IBalanceFreezer is IBalanceFreezerTypes {
     );
 
     /**
-     * @dev Emitted when frozen tokens have been transferred between accounts.
+     * @dev Emitted when a frozen tokens transfer operation have been executed.
      *
      * This event is accompanied by a corresponding event {FrozenBalanceUpdated},
      * since the transfer reduces the frozen balance of the source account.
@@ -34,7 +36,7 @@ interface IBalanceFreezer is IBalanceFreezerTypes {
      * @param from The account from which the frozen tokens have been transferred.
      * @param to The account to which the frozen tokens have been transferred.
      * @param amount The amount of the transferred frozen tokens.
-     * @param txId The off-chain ID of the transaction that caused the transfer.
+     * @param txId The off-chain identifier of the transaction that caused the transfer.
      */
     event FrozenBalanceTransfer(
         address indexed from, // Tools: this comment prevents Prettier from formatting into a single line.

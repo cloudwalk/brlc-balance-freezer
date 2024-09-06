@@ -74,8 +74,17 @@ contract BalanceFreezerShard is BalanceFreezerShardStorage, ContextUpgradeable, 
 
     /**
      * @inheritdoc IBalanceFreezerShard
+     *
+     * @dev Requirements:
+     *
+     * - The caller must be an admin.
      */
-    function registerOperation(bytes32 txId, OperationStatus status) external returns (Error err) {
+    function registerOperation(
+        bytes32 txId,
+        OperationStatus status,
+        address account,
+        uint64 amount
+    ) external onlyAdmin returns (Error err) {
         Operation storage operation = _operations[txId];
 
         if (operation.status != OperationStatus.Nonexistent) {
@@ -83,7 +92,8 @@ contract BalanceFreezerShard is BalanceFreezerShardStorage, ContextUpgradeable, 
         }
 
         operation.status = status;
-        operation.txId = txId;
+        operation.account = account;
+        operation.amount = amount;
 
         return Error.None;
     }
