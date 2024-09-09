@@ -25,13 +25,13 @@ interface IBalanceFreezerErrors {
      */
     error BalanceFreezer_AmountExcess(uint256 amount);
 
-    /// @dev Throws if the provided root address is zero.
+    /// @dev Throws if the provided root contract address is zero.
     error BalanceFreezer_RootAddressZero();
 
-    /// @dev Throws if the provided shard address is zero.
+    /// @dev Throws if the provided shard contract address is zero.
     error BalanceFreezer_ShardAddressZero();
 
-    /// @dev Thrown if the number of shards during their adding exceeds the allowed maximum.
+    /// @dev Thrown if the number of shard contracts during their adding exceeds the allowed maximum.
     error BalanceFreezer_ShardCounterExcess();
 
     /**
@@ -41,7 +41,7 @@ interface IBalanceFreezerErrors {
      */
     error BalanceFreezer_ShardError(uint256 err, bytes32 txId);
 
-    /// @dev Thrown if the number of shards to replace is greater than expected.
+    /// @dev Thrown if the number of shard contracts to replace is greater than expected.
     error BalanceFreezer_ShardReplacementCounterExcess();
 
     /// @dev Thrown if the provided token address is zero.
@@ -146,8 +146,8 @@ interface IBalanceFreezerPrimary is IBalanceFreezerTypes {
      *
      * Emits a {FrozenBalanceTransfer} event.
      *
-     * @param from The account tokens will be transferred from.
-     * @param to The account tokens will be transferred to.
+     * @param from The account whose tokens will be transferred from.
+     * @param to The account whose tokens will be transferred to.
      * @param amount The amount of tokens to transfer.
      * @param txId The off-chain identifier of the transfer operation.
      */
@@ -174,7 +174,7 @@ interface IBalanceFreezerPrimary is IBalanceFreezerTypes {
     function balanceOfFrozen(address account) external view returns (uint256);
 
     /**
-     * @dev Returns the address of the underlying token.
+     * @dev Returns the address of the underlying token contract.
      */
     function underlyingToken() external view returns (address);
 }
@@ -215,15 +215,15 @@ interface IBalanceFreezerConfiguration {
     // ------------------ Functions ------------------------------- //
 
     /**
-     * @dev Sets the shards that are allowed to process operations.
-     * @param shards The array of shard addresses to add.
+     * @dev Adds the shard contracts that are responsible for storage the data of freezing operations.
+     * @param shards The array of shard contract addresses to add.
      */
     function addShards(address[] memory shards) external;
 
     /**
-     * @dev Replaces the existing shards with a new set of shards.
-     * @param fromIndex The index in the internal array to start replacing from.
-     * @param shards The array of shard addresses to replace with.
+     * @dev Replaces the existing shard contracts with a new set of shards.
+     * @param fromIndex The index in the internal shard array to start replacing from.
+     * @param shards The array of shard contract addresses to replace with.
      */
     function replaceShards(uint256 fromIndex, address[] memory shards) external;
 
@@ -235,7 +235,7 @@ interface IBalanceFreezerConfiguration {
     function configureShardAdmin(address account, bool status) external;
 
     /**
-     * @dev Returns the number of shard contracts that is added to the root contract.
+     * @dev Returns the number of shard contracts that have been added to the root contract.
      */
     function getShardCounter() external view returns (uint256);
 

@@ -5,7 +5,7 @@ pragma solidity ^0.8.20;
 import { IBalanceFreezerTypes } from "./IBalanceFreezerTypes.sol";
 
 /**
- * @title BalanceFreezerErrors interface
+ * @title IBalanceFreezerShardErrors interface
  * @author CloudWalk Inc. (See https://www.cloudwalk.io)
  * @dev Defines the custom errors used in the balance freezer shard contract.
  */
@@ -40,10 +40,10 @@ interface IBalanceFreezerShardPrimary is IBalanceFreezerTypes {
     /**
      * @dev Registers a freezing operation.
      * @param txId The off-chain identifier of the operation.
-     * @param status The status of the operation.
+     * @param status The status of the operation according to the {OperationStatus} enum.
      * @param account The address of the account whose frozen balance is updated or transferred from.
      * @param amount The amount parameter of the related operation.
-     * @return err The error code if the operation fails, otherwise None.
+     * @return err The error code if the operation fails, otherwise {Error.None}.
      */
     function registerOperation(
         bytes32 txId,
@@ -83,7 +83,7 @@ interface IBalanceFreezerShardConfiguration {
     // ------------------ Functions ------------------------------- //
 
     /**
-     * @dev Configure the admin status of an account.
+     * @dev Configures the admin status of an account.
      * @param account The address of the account to configure.
      * @param status The admin status of the account.
      */
@@ -111,4 +111,5 @@ interface IBalanceFreezerShardConfiguration {
 interface IBalanceFreezerShard is
     IBalanceFreezerShardErrors,
     IBalanceFreezerShardPrimary,
-    IBalanceFreezerShardConfiguration {}
+    IBalanceFreezerShardConfiguration
+{}

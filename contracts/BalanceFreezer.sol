@@ -2,20 +2,20 @@
 
 pragma solidity 0.8.24;
 
-import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
-import {AccessControlExtUpgradeable} from "./base/AccessControlExtUpgradeable.sol";
-import {PausableExtUpgradeable} from "./base/PausableExtUpgradeable.sol";
-import {RescuableUpgradeable} from "./base/RescuableUpgradeable.sol";
+import { AccessControlExtUpgradeable } from "./base/AccessControlExtUpgradeable.sol";
+import { PausableExtUpgradeable } from "./base/PausableExtUpgradeable.sol";
+import { RescuableUpgradeable } from "./base/RescuableUpgradeable.sol";
 
-import {IBalanceFreezer} from "./interfaces/IBalanceFreezer.sol";
-import {IBalanceFreezerPrimary} from "./interfaces/IBalanceFreezer.sol";
-import {IBalanceFreezerConfiguration} from "./interfaces/IBalanceFreezer.sol";
-import {IBalanceFreezerShard} from "./interfaces/IBalanceFreezerShard.sol";
-import {IBalanceFreezerShardPrimary} from "./interfaces/IBalanceFreezerShard.sol";
-import {IERC20Freezable} from "./interfaces/IERC20Freezable.sol";
+import { IBalanceFreezer } from "./interfaces/IBalanceFreezer.sol";
+import { IBalanceFreezerPrimary } from "./interfaces/IBalanceFreezer.sol";
+import { IBalanceFreezerConfiguration } from "./interfaces/IBalanceFreezer.sol";
+import { IBalanceFreezerShard } from "./interfaces/IBalanceFreezerShard.sol";
+import { IBalanceFreezerShardPrimary } from "./interfaces/IBalanceFreezerShard.sol";
+import { IERC20Freezable } from "./interfaces/IERC20Freezable.sol";
 
-import {BalanceFreezerStorage} from "./BalanceFreezerStorage.sol";
+import { BalanceFreezerStorage } from "./BalanceFreezerStorage.sol";
 
 /**
  * @title BalanceFreezer contract
@@ -25,12 +25,12 @@ import {BalanceFreezerStorage} from "./BalanceFreezerStorage.sol";
  * It stores data about the freezing operations using multiple linked shard contracts.
  */
 contract BalanceFreezer is
-BalanceFreezerStorage,
-AccessControlExtUpgradeable,
-PausableExtUpgradeable,
-RescuableUpgradeable,
-UUPSUpgradeable,
-IBalanceFreezer
+    BalanceFreezerStorage,
+    AccessControlExtUpgradeable,
+    PausableExtUpgradeable,
+    RescuableUpgradeable,
+    UUPSUpgradeable,
+    IBalanceFreezer
 {
     // ------------------ Constants ------------------------------- //
 
