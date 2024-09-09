@@ -222,10 +222,10 @@ describe("Contracts 'BalanceFreezer' and `BalanceFreezerShard`", async () => {
   }
 
   async function checkOperationStructureOnBlockchain(
-    freezerCashier: Contract,
+    freezerRoot: Contract,
     operation: TestOperation
   ) {
-    const actualOperation: Record<string, unknown> = await freezerCashier.getOperation(operation.txId);
+    const actualOperation: Record<string, unknown> = await freezerRoot.getOperation(operation.txId);
     const expectedOperation: Operation = {
       status: operation.status,
       account: operation.account,
@@ -262,7 +262,7 @@ describe("Contracts 'BalanceFreezer' and `BalanceFreezerShard`", async () => {
     it("Configures the root contract as expected", async () => {
       const { freezerRoot, freezerShards, tokenMock } = await setUpFixture(deployContracts);
 
-      // The underlying contract address
+      // The underlying token contract address
       expect(await freezerRoot.underlyingToken()).to.equal(getAddress(tokenMock));
 
       // Role hashes
@@ -294,6 +294,7 @@ describe("Contracts 'BalanceFreezer' and `BalanceFreezerShard`", async () => {
 
       // Other parameters and constants
       expect(await freezerRoot.MAX_SHARD_COUNTER()).to.equal(MAX_SHARD_COUNTER);
+      expect(await freezerRoot.getShardCounter()).to.equal(0);
     });
 
     it("Configures the shard contract as expected", async () => {
@@ -313,9 +314,9 @@ describe("Contracts 'BalanceFreezer' and `BalanceFreezerShard`", async () => {
     });
 
     it("Is reverted if it is called a second time for the shard contract", async () => {
-      const { freezerRoot, freezerShards: [pixCashierShard] } = await setUpFixture(deployContracts);
+      const { freezerRoot, freezerShards: [freezerShard] } = await setUpFixture(deployContracts);
       await expect(
-        pixCashierShard.initialize(getAddress(freezerRoot))
+        freezerShard.initialize(getAddress(freezerRoot))
       ).to.be.revertedWithCustomError(freezerRoot, REVERT_ERROR_IF_CONTRACT_INITIALIZATION_IS_INVALID);
     });
 
@@ -347,11 +348,12 @@ describe("Contracts 'BalanceFreezer' and `BalanceFreezerShard`", async () => {
     });
 
     it("Executes as expected for the shard contract", async () => {
-      const anotherPixCashierShard: Contract = await upgrades.deployProxy(freezerShardFactory, [deployer.address]);
-      await checkContractUupsUpgrading(anotherPixCashierShard, freezerShardFactory);
+      const anotherFreezerShard: Contract =
+        (await upgrades.deployProxy(freezerShardFactory, [shardAdmin.address])).connect(shardAdmin) as Contract;
+      await checkContractUupsUpgrading(anotherFreezerShard, freezerShardFactory);
     });
 
-    it("Is reverted if the caller is not the owner for the root contract", async () => {
+    it("Is reverted if the caller is not the owner on the root contract", async () => {
       const { freezerRoot } = await setUpFixture(deployContracts);
 
       await expect(connect(freezerRoot, user).upgradeToAndCall(user.address, "0x"))
@@ -359,10 +361,10 @@ describe("Contracts 'BalanceFreezer' and `BalanceFreezerShard`", async () => {
         .withArgs(user.address, ownerRole);
     });
 
-    it("Is reverted if the caller is not an admin for the shard contract", async () => {
-      const anotherFreezerShard: Contract = await upgrades.deployProxy(freezerShardFactory, [deployer.address]);
+    it("Is reverted if the caller is not an admin on the shard contract", async () => {
+      const anotherFreezerShard: Contract = await upgrades.deployProxy(freezerShardFactory, [shardAdmin.address]);
 
-      await expect(connect(anotherFreezerShard, user).upgradeToAndCall(user.address, "0x"))
+      await expect(connect(anotherFreezerShard, deployer).upgradeToAndCall(user.address, "0x"))
         .to.be.revertedWithCustomError(anotherFreezerShard, REVERT_ERROR_IF_UNAUTHORIZED_ON_SHARD);
     });
   });
@@ -374,7 +376,8 @@ describe("Contracts 'BalanceFreezer' and `BalanceFreezerShard`", async () => {
     });
 
     it("Executes as expected for the shard contract", async () => {
-      const anotherFreezerShard: Contract = await upgrades.deployProxy(freezerShardFactory, [deployer.address]);
+      const anotherFreezerShard: Contract =
+        (await upgrades.deployProxy(freezerShardFactory, [shardAdmin.address])).connect(shardAdmin) as Contract;
       await checkContractUupsUpgrading(anotherFreezerShard, freezerShardFactory, "upgradeTo(address)");
     });
 
@@ -387,9 +390,9 @@ describe("Contracts 'BalanceFreezer' and `BalanceFreezerShard`", async () => {
     });
 
     it("Is reverted for the shard contract if the caller is not an admin", async () => {
-      const anotherFreezerShard: Contract = await upgrades.deployProxy(freezerShardFactory, [deployer.address]);
+      const anotherFreezerShard: Contract = await upgrades.deployProxy(freezerShardFactory, [shardAdmin.address]);
 
-      await expect(connect(anotherFreezerShard, user).upgradeTo(user.address))
+      await expect(connect(anotherFreezerShard, deployer).upgradeTo(user.address))
         .to.be.revertedWithCustomError(anotherFreezerShard, REVERT_ERROR_IF_UNAUTHORIZED_ON_SHARD);
     });
   });
@@ -399,10 +402,13 @@ describe("Contracts 'BalanceFreezer' and `BalanceFreezerShard`", async () => {
       const { freezerRoot } = await setUpFixture(deployContracts);
       const shardAddresses = users.map(user => user.address);
 
+      // Add a single shard
       const tx1 = freezerRoot.addShards([shardAddresses[0]]);
       await expect(tx1).to.emit(freezerRoot, EVENT_NAME_SHARD_ADDED).withArgs(shardAddresses[0]);
       expect(await freezerRoot.getShardCounter()).to.eq(1);
 
+      // Add many shards.
+      // One address is duplicated in the result shard array.
       const tx2 = freezerRoot.addShards(shardAddresses);
       for (const shardAddress of shardAddresses) {
         await expect(tx2).to.emit(freezerRoot, EVENT_NAME_SHARD_ADDED).withArgs(shardAddress);
@@ -414,11 +420,11 @@ describe("Contracts 'BalanceFreezer' and `BalanceFreezerShard`", async () => {
       const { freezerRoot } = await setUpFixture(deployContracts);
       const fakeShardAddress = user.address;
       await expect(
-        connect(freezerRoot, freezer).addShards([fakeShardAddress])
+        connect(freezerRoot, user).addShards([fakeShardAddress])
       ).to.be.revertedWithCustomError(
         freezerRoot,
         REVERT_ERROR_IF_UNAUTHORIZED_ACCOUNT
-      ).withArgs(freezer.address, ownerRole);
+      ).withArgs(user.address, ownerRole);
     });
 
     it("Is reverted if the number of shard exceeds the allowed maximum", async () => {
@@ -452,16 +458,16 @@ describe("Contracts 'BalanceFreezer' and `BalanceFreezerShard`", async () => {
       await proveTx(freezerRoot.addShards(oldShardAddresses));
 
       // The empty array of addresses to replace
-      const tx1 = await proveTx(freezerRoot.replaceShards(0, []));
-      expect(tx1).not.to.emit(freezerRoot, EVENT_NAME_SHARD_REPLACED);
+      const tx1 = freezerRoot.replaceShards(0, []);
+      await expect(tx1).not.to.emit(freezerRoot, EVENT_NAME_SHARD_REPLACED);
 
       // The start index is outside the array of existing shards
-      const tx2 = await proveTx(freezerRoot.replaceShards(oldShardAddresses.length, newShardAddresses));
-      expect(tx2).not.to.emit(freezerRoot, EVENT_NAME_SHARD_REPLACED);
+      const tx2 = freezerRoot.replaceShards(oldShardAddresses.length, newShardAddresses);
+      await expect(tx2).not.to.emit(freezerRoot, EVENT_NAME_SHARD_REPLACED);
 
       // Replacing the first shard address
-      const tx3 = await proveTx(freezerRoot.replaceShards(0, [newShardAddresses[0]]));
-      expect(tx3).to.emit(freezerRoot, EVENT_NAME_SHARD_REPLACED).withArgs(
+      const tx3 = freezerRoot.replaceShards(0, [newShardAddresses[0]]);
+      await expect(tx3).to.emit(freezerRoot, EVENT_NAME_SHARD_REPLACED).withArgs(
         newShardAddresses[0],
         oldShardAddresses[0]
       );
@@ -469,14 +475,14 @@ describe("Contracts 'BalanceFreezer' and `BalanceFreezerShard`", async () => {
       expect(await freezerRoot.getShardRange(0, oldShardAddresses.length)).to.deep.eq(oldShardAddresses);
 
       // Replacing two shards in the middle
-      const tx4 = await proveTx(freezerRoot.replaceShards(1, [newShardAddresses[1], newShardAddresses[2]]));
-      expect(tx4).to.emit(freezerRoot, EVENT_NAME_SHARD_REPLACED).withArgs(
-        oldShardAddresses[1],
-        newShardAddresses[1]
+      const tx4 = freezerRoot.replaceShards(1, [newShardAddresses[1], newShardAddresses[2]]);
+      await expect(tx4).to.emit(freezerRoot, EVENT_NAME_SHARD_REPLACED).withArgs(
+        newShardAddresses[1],
+        oldShardAddresses[1]
       );
-      expect(tx4).to.emit(freezerRoot, EVENT_NAME_SHARD_REPLACED).withArgs(
-        oldShardAddresses[2],
-        newShardAddresses[2]
+      await expect(tx4).to.emit(freezerRoot, EVENT_NAME_SHARD_REPLACED).withArgs(
+        newShardAddresses[2],
+        oldShardAddresses[2]
       );
       oldShardAddresses[1] = newShardAddresses[1];
       oldShardAddresses[2] = newShardAddresses[2];
@@ -485,13 +491,13 @@ describe("Contracts 'BalanceFreezer' and `BalanceFreezerShard`", async () => {
       // Replacing all shards except the first one.
       // One address is duplicated in the result shard array.
       newShardAddresses.pop();
-      const tx5 = await proveTx(freezerRoot.replaceShards(1, newShardAddresses));
-      for (let i = 0; i < oldShardAddresses.length - 1; ++i) {
-        expect(tx5).to.emit(freezerRoot, EVENT_NAME_SHARD_REPLACED).withArgs(
-          oldShardAddresses[i],
-          newShardAddresses[i]
+      const tx5 = freezerRoot.replaceShards(1, newShardAddresses);
+      for (let i = 1; i < oldShardAddresses.length; ++i) {
+        await expect(tx5).to.emit(freezerRoot, EVENT_NAME_SHARD_REPLACED).withArgs(
+          newShardAddresses[i - 1],
+          oldShardAddresses[i]
         );
-        oldShardAddresses[i + 1] = newShardAddresses[i];
+        oldShardAddresses[i] = newShardAddresses[i - 1];
       }
       expect(await freezerRoot.getShardRange(0, oldShardAddresses.length)).to.deep.eq(oldShardAddresses);
     });
@@ -500,11 +506,11 @@ describe("Contracts 'BalanceFreezer' and `BalanceFreezerShard`", async () => {
       const { freezerRoot } = await setUpFixture(deployContracts);
       const fakeShardAddress = user.address;
       await expect(
-        connect(freezerRoot, freezer).replaceShards(0, [fakeShardAddress])
+        connect(freezerRoot, user).replaceShards(0, [fakeShardAddress])
       ).to.be.revertedWithCustomError(
         freezerRoot,
         REVERT_ERROR_IF_UNAUTHORIZED_ACCOUNT
-      ).withArgs(freezer.address, ownerRole);
+      ).withArgs(user.address, ownerRole);
     });
 
     it("Is reverted if the number of shards to replacement is greater than expected", async () => {
@@ -650,7 +656,7 @@ describe("Contracts 'BalanceFreezer' and `BalanceFreezerShard`", async () => {
         expect(await freezerShard.isAdmin(user.address)).to.eq(false);
       }
 
-      const tx1 = await proveTx(freezerRoot.configureShardAdmin(user.address, true));
+      const tx1 = freezerRoot.configureShardAdmin(user.address, true);
       await expect(tx1)
         .to.emit(freezerRoot, EVENT_NAME_SHARD_ADMIN_CONFIGURED)
         .withArgs(
@@ -659,11 +665,11 @@ describe("Contracts 'BalanceFreezer' and `BalanceFreezerShard`", async () => {
           freezerShards.length // Shard counter
         );
 
-      for (const pixCashierShard of freezerShards) {
-        expect(await pixCashierShard.isAdmin(user.address)).to.eq(true);
+      for (const freezerShard of freezerShards) {
+        expect(await freezerShard.isAdmin(user.address)).to.eq(true);
       }
 
-      const tx2 = await proveTx(freezerRoot.configureShardAdmin(user.address, false));
+      const tx2 = freezerRoot.configureShardAdmin(user.address, false);
       await expect(tx2)
         .to.emit(freezerRoot, EVENT_NAME_SHARD_ADMIN_CONFIGURED)
         .withArgs(
@@ -672,8 +678,8 @@ describe("Contracts 'BalanceFreezer' and `BalanceFreezerShard`", async () => {
           freezerShards.length // Shard counter
         );
 
-      for (const pixCashierShard of freezerShards) {
-        expect(await pixCashierShard.isAdmin(user.address)).to.eq(false);
+      for (const freezerShard of freezerShards) {
+        expect(await freezerShard.isAdmin(user.address)).to.eq(false);
       }
     });
 
@@ -756,18 +762,18 @@ describe("Contracts 'BalanceFreezer' and `BalanceFreezerShard`", async () => {
       const operationBefore: TestOperation = { txId: operation.txId, ...defaultOperation };
       await checkOperationStructureOnBlockchain(freezerRoot, operationBefore);
 
-      const tx = await proveTx(connect(freezerRoot, freezer).freeze(
+      const tx = connect(freezerRoot, freezer).freeze(
         operation.account,
         operation.amount,
         operation.txId
-      ));
-      expect(tx).to.be.emit(freezerRoot, EVENT_NAME_FROZEN_BALANCE_UPDATED).withArgs(
+      );
+      await expect(tx).to.be.emit(freezerRoot, EVENT_NAME_FROZEN_BALANCE_UPDATED).withArgs(
         operation.account,
         newFrozenBalance,
         oldFrozenBalance,
         operation.txId
       );
-      expect(tx).to.be.emit(tokenMock, EVENT_NAME_MOCK_CALL_FREEZE).withArgs(
+      await expect(tx).to.be.emit(tokenMock, EVENT_NAME_MOCK_CALL_FREEZE).withArgs(
         operation.account,
         operation.amount
       );
@@ -841,18 +847,18 @@ describe("Contracts 'BalanceFreezer' and `BalanceFreezerShard`", async () => {
       const operationBefore: TestOperation = { txId: operation.txId, ...defaultOperation };
       await checkOperationStructureOnBlockchain(freezerRoot, operationBefore);
 
-      const tx = await proveTx(connect(freezerRoot, freezer).freezeIncrease(
+      const tx = connect(freezerRoot, freezer).freezeIncrease(
         operation.account,
         operation.amount,
         operation.txId
-      ));
-      expect(tx).to.be.emit(freezerRoot, EVENT_NAME_FROZEN_BALANCE_UPDATED).withArgs(
+      );
+      await expect(tx).to.be.emit(freezerRoot, EVENT_NAME_FROZEN_BALANCE_UPDATED).withArgs(
         operation.account,
         newFrozenBalance,
         oldFrozenBalance,
         operation.txId
       );
-      expect(tx).to.be.emit(tokenMock, EVENT_NAME_MOCK_CALL_FREEZE_INCREASE).withArgs(
+      await expect(tx).to.be.emit(tokenMock, EVENT_NAME_MOCK_CALL_FREEZE_INCREASE).withArgs(
         operation.account,
         operation.amount
       );
@@ -926,18 +932,18 @@ describe("Contracts 'BalanceFreezer' and `BalanceFreezerShard`", async () => {
       const operationBefore: TestOperation = { txId: operation.txId, ...defaultOperation };
       await checkOperationStructureOnBlockchain(freezerRoot, operationBefore);
 
-      const tx = await proveTx(connect(freezerRoot, freezer).freezeDecrease(
+      const tx = connect(freezerRoot, freezer).freezeDecrease(
         operation.account,
         operation.amount,
         operation.txId
-      ));
-      expect(tx).to.be.emit(freezerRoot, EVENT_NAME_FROZEN_BALANCE_UPDATED).withArgs(
+      );
+      await expect(tx).to.be.emit(freezerRoot, EVENT_NAME_FROZEN_BALANCE_UPDATED).withArgs(
         operation.account,
         newFrozenBalance,
         oldFrozenBalance,
         operation.txId
       );
-      expect(tx).to.be.emit(tokenMock, EVENT_NAME_MOCK_CALL_FREEZE_DECREASE).withArgs(
+      await expect(tx).to.be.emit(tokenMock, EVENT_NAME_MOCK_CALL_FREEZE_DECREASE).withArgs(
         operation.account,
         operation.amount
       );
@@ -1018,19 +1024,19 @@ describe("Contracts 'BalanceFreezer' and `BalanceFreezerShard`", async () => {
       const operationBefore: TestOperation = { txId: operation.txId, ...defaultOperation };
       await checkOperationStructureOnBlockchain(freezerRoot, operationBefore);
 
-      const tx = await proveTx(connect(freezerRoot, freezer).transferFrozen(
+      const tx = connect(freezerRoot, freezer).transferFrozen(
         operation.account, // from
         receiverAddress, // to
         operation.amount,
         operation.txId
-      ));
-      expect(tx).to.be.emit(freezerRoot, EVENT_NAME_FROZEN_BALANCE_TRANSFER).withArgs(
+      );
+      await expect(tx).to.be.emit(freezerRoot, EVENT_NAME_FROZEN_BALANCE_TRANSFER).withArgs(
         operation.account,
         operation.amount,
         operation.txId,
         receiverAddress
       );
-      expect(tx).to.be.emit(freezerRoot, EVENT_NAME_FROZEN_BALANCE_UPDATED).withArgs(
+      await expect(tx).to.be.emit(freezerRoot, EVENT_NAME_FROZEN_BALANCE_UPDATED).withArgs(
         operation.account,
         newFrozenBalance,
         oldFrozenBalance,

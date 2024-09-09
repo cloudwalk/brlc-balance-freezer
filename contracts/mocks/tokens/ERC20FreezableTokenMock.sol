@@ -34,7 +34,7 @@ contract ERC20FreezableTokenMock is ERC20, IERC20Freezable {
         uint256 amount
     );
 
-    /// @dev A mock event with the parameters that were passed to the `freezeIncrease()` function.
+    /// @dev A mock event with the parameters that were passed to the `transferFrozen()` function.
     event MockCallTransferFrozen(
         address from, // Tools: this comment prevents Prettier from formatting into a single line.
         address to,
@@ -44,7 +44,7 @@ contract ERC20FreezableTokenMock is ERC20, IERC20Freezable {
     // ------------------ Constructor ----------------------------- //
 
     /**
-     * @dev The initialize function of the upgradable contract.
+     * @dev The constructor of the contract.
      * @param name_ The name of the token to set for this ERC20-comparable contract.
      * @param symbol_ The symbol of the token to set for this ERC20-comparable contract.
      */
@@ -73,9 +73,9 @@ contract ERC20FreezableTokenMock is ERC20, IERC20Freezable {
         address account, // Tools: this comment prevents Prettier from formatting into a single line.
         uint256 amount
     ) external returns (uint256 newBalance, uint256 oldBalance) {
+        emit MockCallFreeze(account, amount);
         oldBalance = OLD_FROZEN_BALANCE_MOCK;
         newBalance = amount;
-        emit MockCallFreeze(account, amount);
     }
 
     /**
@@ -90,9 +90,9 @@ contract ERC20FreezableTokenMock is ERC20, IERC20Freezable {
         address account, // Tools: this comment prevents Prettier from formatting into a single line
         uint256 amount
     ) external returns (uint256 newBalance, uint256 oldBalance) {
+        emit MockCallFreezeIncrease(account, amount);
         oldBalance = OLD_FROZEN_BALANCE_MOCK;
         newBalance = oldBalance + amount;
-        emit MockCallFreezeIncrease(account, amount);
     }
 
     /**
@@ -107,13 +107,8 @@ contract ERC20FreezableTokenMock is ERC20, IERC20Freezable {
         address account, // Tools: this comment prevents Prettier from formatting into a single line.
         uint256 amount
     ) external returns (uint256 newBalance, uint256 oldBalance) {
-        oldBalance = OLD_FROZEN_BALANCE_MOCK;
-        if (amount > oldBalance) {
-            newBalance = 0;
-        } else {
-            newBalance = oldBalance - amount;
-        }
-        emit MockCallFreezeIncrease(account, amount);
+        emit MockCallFreezeDecrease(account, amount);
+        return _decreaseFrozen(amount);
     }
 
     /**
@@ -130,13 +125,8 @@ contract ERC20FreezableTokenMock is ERC20, IERC20Freezable {
         address to,
         uint256 amount
     ) external returns (uint256 newBalance, uint256 oldBalance) {
-        oldBalance = OLD_FROZEN_BALANCE_MOCK;
-        if (amount > oldBalance) {
-            newBalance = 0;
-        } else {
-            newBalance = oldBalance - amount;
-        }
         emit MockCallTransferFrozen(from, to, amount);
+        return _decreaseFrozen(amount);
     }
 
     /**
@@ -147,5 +137,15 @@ contract ERC20FreezableTokenMock is ERC20, IERC20Freezable {
      */
     function balanceOfFrozen(address account) external pure returns (uint256) {
         return OLD_FROZEN_BALANCE_MOCK + uint256(uint160(account));
+    }
+
+    /// @dev Calculates and returns mock frozen balances internally;
+    function _decreaseFrozen(uint256 amount) internal pure returns (uint256 newBalance, uint256 oldBalance) {
+        oldBalance = OLD_FROZEN_BALANCE_MOCK;
+        if (amount > oldBalance) {
+            newBalance = 0;
+        } else {
+            newBalance = oldBalance - amount;
+        }
     }
 }
