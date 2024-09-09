@@ -176,7 +176,7 @@ contract BalanceFreezer is
         address to,
         uint256 amount,
         bytes32 txId
-    ) public virtual whenNotPaused onlyRole(FREEZER_ROLE) {
+    ) external whenNotPaused onlyRole(FREEZER_ROLE) {
         _checkAndRegisterOperation(txId, OperationStatus.TransferExecuted, from, amount);
         (uint256 newBalance, uint256 oldBalance) = IERC20Freezable(_token).transferFrozen(from, to, amount);
         emit FrozenBalanceTransfer(from, amount, txId, to);

@@ -144,7 +144,9 @@ interface IBalanceFreezerPrimary is IBalanceFreezerTypes {
     /**
      * @dev Transfers frozen tokens on behalf of an account.
      *
-     * Emits a {FrozenBalanceTransfer} event.
+     * The transfer decreases the frozen balance of the account by the transferred amount.
+     *
+     * Emits a {FrozenBalanceTransfer} event and a {FrozenBalanceUpdated} event.
      *
      * @param from The account whose tokens will be transferred from.
      * @param to The account whose tokens will be transferred to.
