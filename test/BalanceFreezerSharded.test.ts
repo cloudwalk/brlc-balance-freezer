@@ -92,7 +92,7 @@ describe("Contracts 'BalanceFreezer' and `BalanceFreezerShard`", async () => {
     TOKEN_AMOUNT * 4,
     TOKEN_AMOUNT * 5
   ];
-  const MAX_SHARD_COUNTER = 100;
+  const MAX_SHARD_COUNT = 100;
 
   // Errors of the lib contracts
   const REVERT_ERROR_IF_CONTRACT_INITIALIZATION_IS_INVALID = "InvalidInitialization";
@@ -106,8 +106,8 @@ describe("Contracts 'BalanceFreezer' and `BalanceFreezerShard`", async () => {
   const REVERT_ERROR_IF_OPERATION_ALREADY_EXECUTED = "BalanceFreezer_AlreadyExecuted";
   const REVERT_ERROR_IF_ROOT_ADDRESS_IS_ZERO = "BalanceFreezer_RootAddressZero";
   const REVERT_ERROR_IF_SHARD_ADDRESS_IS_ZERO = "BalanceFreezer_ShardAddressZero";
-  const REVERT_ERROR_IF_SHARD_COUNTER_EXCESS = "BalanceFreezer_ShardCounterExcess";
-  const REVERT_ERROR_IF_SHARD_REPLACEMENT_COUNTER_EXCESS = "BalanceFreezer_ShardReplacementCounterExcess";
+  const REVERT_ERROR_IF_SHARD_COUNT_EXCESS = "BalanceFreezer_ShardCountExcess";
+  const REVERT_ERROR_IF_SHARD_REPLACEMENT_COUNT_EXCESS = "BalanceFreezer_ShardReplacementCountExcess";
   const REVERT_ERROR_IF_TOKEN_ADDRESS_IS_ZERO = "BalanceFreezer_TokenAddressZero";
   const REVERT_ERROR_IF_TX_ID_IS_ZERO = "BalanceFreezer_TxIdZero";
   const REVERT_ERROR_IF_UNAUTHORIZED_ON_SHARD = "BalanceFreezerShard_Unauthorized";
@@ -297,8 +297,8 @@ describe("Contracts 'BalanceFreezer' and `BalanceFreezerShard`", async () => {
       }
 
       // Other parameters and constants
-      expect(await freezerRoot.MAX_SHARD_COUNTER()).to.equal(MAX_SHARD_COUNTER);
-      expect(await freezerRoot.getShardCounter()).to.equal(0);
+      expect(await freezerRoot.MAX_SHARD_COUNT()).to.equal(MAX_SHARD_COUNT);
+      expect(await freezerRoot.getShardCount()).to.equal(0);
     });
 
     it("Configures the shard contract as expected", async () => {
@@ -409,7 +409,7 @@ describe("Contracts 'BalanceFreezer' and `BalanceFreezerShard`", async () => {
       // Add a single shard
       const tx1 = freezerRoot.addShards([shardAddresses[0]]);
       await expect(tx1).to.emit(freezerRoot, EVENT_NAME_SHARD_ADDED).withArgs(shardAddresses[0]);
-      expect(await freezerRoot.getShardCounter()).to.eq(1);
+      expect(await freezerRoot.getShardCount()).to.eq(1);
 
       // Add many shards.
       // One address is duplicated in the result shard array.
@@ -417,7 +417,7 @@ describe("Contracts 'BalanceFreezer' and `BalanceFreezerShard`", async () => {
       for (const shardAddress of shardAddresses) {
         await expect(tx2).to.emit(freezerRoot, EVENT_NAME_SHARD_ADDED).withArgs(shardAddress);
       }
-      expect(await freezerRoot.getShardCounter()).to.eq(1 + shardAddresses.length);
+      expect(await freezerRoot.getShardCount()).to.eq(1 + shardAddresses.length);
     });
 
     it("Is reverted if the caller is not the owner", async () => {
@@ -434,7 +434,7 @@ describe("Contracts 'BalanceFreezer' and `BalanceFreezerShard`", async () => {
     it("Is reverted if the number of shard exceeds the allowed maximum", async () => {
       const { freezerRoot } = await setUpFixture(deployContracts);
       const fakeShardAddress: string[] = Array.from(
-        { length: MAX_SHARD_COUNTER },
+        { length: MAX_SHARD_COUNT },
         (_v, i) => "0x" + ((i + 1).toString().padStart(40, "0"))
       );
       const additionalFakeShardAddress = user.address;
@@ -442,20 +442,20 @@ describe("Contracts 'BalanceFreezer' and `BalanceFreezerShard`", async () => {
 
       await expect(
         freezerRoot.addShards([additionalFakeShardAddress])
-      ).to.be.revertedWithCustomError(freezerRoot, REVERT_ERROR_IF_SHARD_COUNTER_EXCESS);
+      ).to.be.revertedWithCustomError(freezerRoot, REVERT_ERROR_IF_SHARD_COUNT_EXCESS);
     });
   });
 
   describe("Function 'replaceShards()'", async () => {
     it("Executes as expected", async () => {
       const { freezerRoot } = await setUpFixture(deployContracts);
-      const shardCounter = 5;
+      const shardCount = 5;
       const oldShardAddresses = Array.from(
-        { length: shardCounter },
+        { length: shardCount },
         (_v, i) => "0x" + (i + 1).toString(16).padStart(40, "0")
       );
       const newShardAddresses = Array.from(
-        { length: shardCounter },
+        { length: shardCount },
         (_v, i) => "0x" + (i + 16).toString(16).padStart(40, "0")
       );
 
@@ -527,7 +527,7 @@ describe("Contracts 'BalanceFreezer' and `BalanceFreezerShard`", async () => {
 
       await expect(
         freezerRoot.replaceShards(1, fakeShardAddresses)
-      ).to.be.revertedWithCustomError(freezerRoot, REVERT_ERROR_IF_SHARD_REPLACEMENT_COUNTER_EXCESS);
+      ).to.be.revertedWithCustomError(freezerRoot, REVERT_ERROR_IF_SHARD_REPLACEMENT_COUNT_EXCESS);
     });
   });
 
@@ -666,7 +666,7 @@ describe("Contracts 'BalanceFreezer' and `BalanceFreezerShard`", async () => {
         .withArgs(
           user.address,
           true,
-          freezerShards.length // Shard counter
+          freezerShards.length // Shard count
         );
 
       for (const freezerShard of freezerShards) {
@@ -679,7 +679,7 @@ describe("Contracts 'BalanceFreezer' and `BalanceFreezerShard`", async () => {
         .withArgs(
           user.address,
           false,
-          freezerShards.length // Shard counter
+          freezerShards.length // Shard count
         );
 
       for (const freezerShard of freezerShards) {
@@ -1153,11 +1153,11 @@ describe("Contracts 'BalanceFreezer' and `BalanceFreezerShard`", async () => {
   describe("Function 'getShardByTxId()'", async () => {
     it("Returns expected values for different transaction IDs", async () => {
       const { freezerRoot, freezerShards } = await setUpFixture(deployAndConfigureContracts);
-      const shardCounter = freezerShards.length;
-      const expectedShardIndexes: number[] = TX_ID_ARRAY.map(txId => defineShardIndexByTxId(txId, shardCounter));
+      const shardCount = freezerShards.length;
+      const expectedShardIndexes: number[] = TX_ID_ARRAY.map(txId => defineShardIndexByTxId(txId, shardCount));
       const expectedShardAddresses: string[] = expectedShardIndexes.map(i => getAddress(freezerShards[i]));
 
-      for (let i = 0; i < shardCounter; ++i) {
+      for (let i = 0; i < shardCount; ++i) {
         if (!expectedShardIndexes.includes(i)) {
           throw Error(`Not all shard indexes are covered with the test. Current indexes: ${expectedShardIndexes}`);
         }
