@@ -251,6 +251,7 @@ contract BalanceFreezer is
     }
 
     // ------------------ View functions -------------------------- //
+
     /**
      * @inheritdoc IBalanceFreezerPrimary
      */
@@ -309,6 +310,7 @@ contract BalanceFreezer is
     }
 
     // ------------------ Internal functions ---------------------- //
+
     /**
      * @dev Checks a shard error and reverts if necessary.
      */
