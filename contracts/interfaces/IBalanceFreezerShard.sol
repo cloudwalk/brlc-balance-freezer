@@ -18,7 +18,7 @@ interface IBalanceFreezerShardErrors {
 }
 
 /**
- * @title BalanceFreezerShardPrimary interface
+ * @title IBalanceFreezerShardPrimary interface
  * @author CloudWalk Inc. (See https://www.cloudwalk.io)
  * @dev The primary interface of the contract responsible for sharded storage of data about freezing operations.
  */
@@ -61,7 +61,7 @@ interface IBalanceFreezerShardPrimary is IBalanceFreezerTypes {
 }
 
 /**
- * @title BalanceFreezerShardConfiguration interface
+ * @title IBalanceFreezerShardConfiguration interface
  * @author CloudWalk Inc. (See https://www.cloudwalk.io)
  * @dev The configuration interface of the contract responsible for sharded storage of data about freezing operations.
  */
