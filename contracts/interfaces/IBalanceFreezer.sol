@@ -10,7 +10,7 @@ import { IBalanceFreezerTypes } from "./IBalanceFreezerTypes.sol";
  * @dev Defines the custom errors used in the balance freezer contract.
  */
 interface IBalanceFreezerErrors {
-    /// @dev Throws if the provided account address is zero.
+    /// @dev Thrown if the provided account address is zero.
     error BalanceFreezer_AccountAddressZero();
 
     /**
@@ -25,17 +25,17 @@ interface IBalanceFreezerErrors {
      */
     error BalanceFreezer_AmountExcess(uint256 amount);
 
-    /// @dev Throws if the provided root contract address is zero.
+    /// @dev Thrown if the provided root contract address is zero.
     error BalanceFreezer_RootAddressZero();
 
-    /// @dev Throws if the provided shard contract address is zero.
+    /// @dev Thrown if the provided shard contract address is zero.
     error BalanceFreezer_ShardAddressZero();
 
     /// @dev Thrown if the number of shard contracts during their adding exceeds the allowed maximum.
     error BalanceFreezer_ShardCounterExcess();
 
     /**
-     * @dev Throws if a shard contract returns an error.
+     * @dev Thrown if a shard contract returns an error.
      * @param err The error code according to the {IBalanceFreezerShard.Error} enum.
      * @param txId The provided off-chain transaction identifier of the related operation.
      */

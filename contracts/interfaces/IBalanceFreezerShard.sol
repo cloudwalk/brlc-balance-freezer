@@ -10,10 +10,10 @@ import { IBalanceFreezerTypes } from "./IBalanceFreezerTypes.sol";
  * @dev Defines the custom errors used in the balance freezer shard contract.
  */
 interface IBalanceFreezerShardErrors {
-    /// @dev Throws if the provided account address is zero.
+    /// @dev Thrown if the provided account address is zero.
     error BalanceFreezerShard_AccountAddressZero();
 
-    /// @dev Throws if the caller is not an admin.
+    /// @dev Thrown if the caller is not an admin.
     error BalanceFreezerShard_Unauthorized();
 }
 
