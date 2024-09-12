@@ -35,11 +35,11 @@ interface IBalanceFreezerErrors {
     error BalanceFreezer_ShardCounterExcess();
 
     /**
-     * @dev Thrown if a shard contract returns an error.
-     * @param err The error code according to the {IBalanceFreezerShard.Error} enum.
+     * @dev Thrown if a shard contract returns an unexpected error.
+     * @param err The error code of the shard contract.
      * @param txId The provided off-chain transaction identifier of the related operation.
      */
-    error BalanceFreezer_ShardError(uint256 err, bytes32 txId);
+    error BalanceFreezer_UnexpectedShardError(uint256 err, bytes32 txId);
 
     /// @dev Thrown if the number of shard contracts to replace is greater than expected.
     error BalanceFreezer_ShardReplacementCounterExcess();

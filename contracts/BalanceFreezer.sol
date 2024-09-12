@@ -333,7 +333,7 @@ contract BalanceFreezer is
             if (err == IBalanceFreezerShardPrimary.Error.OperationAlreadyExecuted) {
                 revert BalanceFreezer_AlreadyExecuted(txId);
             }
-            revert BalanceFreezer_ShardError(uint256(err), txId);
+            revert BalanceFreezer_UnexpectedShardError(uint256(err), txId);
         }
     }
 

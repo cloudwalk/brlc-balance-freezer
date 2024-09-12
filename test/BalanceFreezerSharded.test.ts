@@ -111,6 +111,7 @@ describe("Contracts 'BalanceFreezer' and `BalanceFreezerShard`", async () => {
   const REVERT_ERROR_IF_TOKEN_ADDRESS_IS_ZERO = "BalanceFreezer_TokenAddressZero";
   const REVERT_ERROR_IF_TX_ID_IS_ZERO = "BalanceFreezer_TxIdZero";
   const REVERT_ERROR_IF_UNAUTHORIZED_ON_SHARD = "BalanceFreezerShard_Unauthorized";
+  const REVERT_ERROR_IF_UNEXPECTED_SHARD_ERROR = "BalanceFreezer_UnexpectedShardError";
 
   // Events of the contracts under test
   const EVENT_NAME_FROZEN_BALANCE_TRANSFER = "FrozenBalanceTransfer";
@@ -128,6 +129,7 @@ describe("Contracts 'BalanceFreezer' and `BalanceFreezerShard`", async () => {
   let freezerRootFactory: ContractFactory;
   let freezerShardFactory: ContractFactory;
   let tokenMockFactory: ContractFactory;
+  let freezerShardMockFactory: ContractFactory;
   let deployer: HardhatEthersSigner;
   let shardAdmin: HardhatEthersSigner;
   let freezer: HardhatEthersSigner;
@@ -152,6 +154,8 @@ describe("Contracts 'BalanceFreezer' and `BalanceFreezerShard`", async () => {
     freezerShardFactory = freezerShardFactory.connect(deployer);
     tokenMockFactory = await ethers.getContractFactory("ERC20FreezableTokenMock");
     tokenMockFactory = tokenMockFactory.connect(deployer);
+    freezerShardMockFactory = await ethers.getContractFactory("BalanceFreezerShardMock");
+    freezerShardMockFactory = freezerShardMockFactory.connect(deployer);
   });
 
   async function deployTokenMock(): Promise<Contract> {
@@ -1213,6 +1217,66 @@ describe("Contracts 'BalanceFreezer' and `BalanceFreezerShard`", async () => {
         operation.account,
         operation.amount
       )).to.be.revertedWithCustomError(freezerShards[0], REVERT_ERROR_IF_UNAUTHORIZED_ON_SHARD);
+    });
+
+    it("The root treats an unexpected error of the 'registerOperation()' shard function properly", async () => {
+      const { freezerRoot, freezerShards } = await setUpFixture(deployAndConfigureContracts);
+      const [operation] = defineTestOperations();
+      const mockFreezerShard = await freezerShardMockFactory.deploy() as Contract;
+      await mockFreezerShard.waitForDeployment();
+      const unexpectedError = await mockFreezerShard.REGISTER_OPERATION_UNEXPECTED_ERROR();
+      const newFreezerShardAddresses = Array(freezerShards.length).fill(getAddress(mockFreezerShard));
+      await proveTx(freezerRoot.replaceShards(0, newFreezerShardAddresses));
+      const freezerRootUnderFreezer = connect(freezerRoot, freezer);
+
+      await expect(freezerRootUnderFreezer.freeze(
+        operation.account,
+        operation.amount,
+        operation.txId
+      )).to.be.revertedWithCustomError(
+        freezerRoot,
+        REVERT_ERROR_IF_UNEXPECTED_SHARD_ERROR
+      ).withArgs(
+        unexpectedError,
+        operation.txId
+      );
+
+      await expect(freezerRootUnderFreezer.freezeIncrease(
+        operation.account,
+        operation.amount,
+        operation.txId
+      )).to.be.revertedWithCustomError(
+        freezerRoot,
+        REVERT_ERROR_IF_UNEXPECTED_SHARD_ERROR
+      ).withArgs(
+        unexpectedError,
+        operation.txId
+      );
+
+      await expect(freezerRootUnderFreezer.freezeDecrease(
+        operation.account,
+        operation.amount,
+        operation.txId
+      )).to.be.revertedWithCustomError(
+        freezerRoot,
+        REVERT_ERROR_IF_UNEXPECTED_SHARD_ERROR
+      ).withArgs(
+        unexpectedError,
+        operation.txId
+      );
+
+      await expect(freezerRootUnderFreezer.transferFrozen(
+        operation.account,
+        receiver.address,
+        operation.amount,
+        operation.txId
+      )).to.be.revertedWithCustomError(
+        freezerRoot,
+        REVERT_ERROR_IF_UNEXPECTED_SHARD_ERROR
+      ).withArgs(
+        unexpectedError,
+        operation.txId
+      );
     });
   });
 });
