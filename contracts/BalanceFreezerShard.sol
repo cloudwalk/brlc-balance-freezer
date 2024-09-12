@@ -78,18 +78,18 @@ contract BalanceFreezerShard is BalanceFreezerShardStorage, ContextUpgradeable, 
         OperationStatus status,
         address account,
         uint64 amount
-    ) external onlyAdmin returns (Error err) {
+    ) external onlyAdmin returns (uint256 err) {
         Operation storage operation = _operations[txId];
 
         if (operation.status != OperationStatus.Nonexistent) {
-            return Error.OperationAlreadyExecuted;
+            return uint256(Error.OperationAlreadyExecuted);
         }
 
         operation.status = status;
         operation.account = account;
         operation.amount = amount;
 
-        return Error.None;
+        return uint256(Error.None);
     }
 
     /**

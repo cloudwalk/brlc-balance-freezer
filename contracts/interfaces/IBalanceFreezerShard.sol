@@ -50,7 +50,7 @@ interface IBalanceFreezerShardPrimary is IBalanceFreezerTypes {
         OperationStatus status,
         address account,
         uint64 amount
-    ) external returns (Error err);
+    ) external returns (uint256 err);
 
     /**
      * @dev Returns the data of a single freezing operation.

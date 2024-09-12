@@ -327,13 +327,13 @@ contract BalanceFreezer is
             revert BalanceFreezer_AmountExcess(amount);
         }
 
-        IBalanceFreezerShard.Error err = _shard(txId).registerOperation(txId, status, account, uint64(amount));
+        uint256 err = _shard(txId).registerOperation(txId, status, account, uint64(amount));
 
-        if (err != IBalanceFreezerShardPrimary.Error.None) {
-            if (err == IBalanceFreezerShardPrimary.Error.OperationAlreadyExecuted) {
+        if (err != uint256(IBalanceFreezerShardPrimary.Error.None)) {
+            if (err == uint256(IBalanceFreezerShardPrimary.Error.OperationAlreadyExecuted)) {
                 revert BalanceFreezer_AlreadyExecuted(txId);
             }
-            revert BalanceFreezer_UnexpectedShardError(uint256(err), txId);
+            revert BalanceFreezer_UnexpectedShardError(err, txId);
         }
     }
 
