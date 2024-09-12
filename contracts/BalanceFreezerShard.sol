@@ -2,7 +2,6 @@
 
 pragma solidity 0.8.24;
 
-import { ContextUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol";
 import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
 import { IBalanceFreezerShard } from "./interfaces/IBalanceFreezerShard.sol";
@@ -16,7 +15,7 @@ import { BalanceFreezerShardStorage } from "./BalanceFreezerShardStorage.sol";
  * @author CloudWalk Inc. (See https://www.cloudwalk.io)
  * @dev The contract responsible for sharded storage of data about freezing operations.
  */
-contract BalanceFreezerShard is BalanceFreezerShardStorage, ContextUpgradeable, UUPSUpgradeable, IBalanceFreezerShard {
+contract BalanceFreezerShard is BalanceFreezerShardStorage, UUPSUpgradeable, IBalanceFreezerShard {
     // ------------------ Initializers ---------------------------- //
 
     /**
@@ -38,7 +37,6 @@ contract BalanceFreezerShard is BalanceFreezerShardStorage, ContextUpgradeable, 
      * @param admin_ The address of the contract admin.
      */
     function __BalanceFreezerShard_init(address admin_) internal onlyInitializing {
-        __Context_init_unchained();
         __UUPSUpgradeable_init_unchained();
 
         __BalanceFreezerShard_init_unchained(admin_);
