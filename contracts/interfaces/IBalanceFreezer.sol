@@ -54,7 +54,7 @@ interface IBalanceFreezerErrors {
 /**
  * @title IBalanceFreezerPrimary interface
  * @author CloudWalk Inc. (See https://cloudwalk.io)
- * @dev The primary interface of the contract responsible for freezing operations on the underlying token contract.
+ * @dev The primary interface of the balance freezer contract.
  */
 interface IBalanceFreezerPrimary is IBalanceFreezerTypes {
     // ------------------ Events ---------------------------------- //
@@ -184,7 +184,7 @@ interface IBalanceFreezerPrimary is IBalanceFreezerTypes {
 /**
  * @title IBalanceFreezerConfiguration interface
  * @author CloudWalk Inc. (See https://cloudwalk.io)
- * @dev The configuration interface of the contract responsible for freezing operations.
+ * @dev The configuration interface of the balance freezer contract.
  */
 interface IBalanceFreezerConfiguration {
     // ------------------ Events ---------------------------------- //
@@ -258,6 +258,10 @@ interface IBalanceFreezerConfiguration {
 /**
  * @title IBalanceFreezer interface
  * @author CloudWalk Inc. (See https://cloudwalk.io)
- * @dev The interface of the contract responsible for freezing operations on the underlying token contract.
+ * @dev The full interface of the balance freezer contract.
  */
-interface IBalanceFreezer is IBalanceFreezerErrors, IBalanceFreezerPrimary, IBalanceFreezerConfiguration {}
+interface IBalanceFreezer is
+    IBalanceFreezerErrors, // Tools: this comment prevents Prettier from formatting into a single line.
+    IBalanceFreezerPrimary,
+    IBalanceFreezerConfiguration
+{}

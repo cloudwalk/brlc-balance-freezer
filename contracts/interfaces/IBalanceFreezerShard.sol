@@ -20,7 +20,7 @@ interface IBalanceFreezerShardErrors {
 /**
  * @title IBalanceFreezerShardPrimary interface
  * @author CloudWalk Inc. (See https://www.cloudwalk.io)
- * @dev The primary interface of the contract responsible for sharded storage of data about freezing operations.
+ * @dev The primary interface of the balance freezer shard contract.
  */
 interface IBalanceFreezerShardPrimary is IBalanceFreezerTypes {
     /**
@@ -63,7 +63,7 @@ interface IBalanceFreezerShardPrimary is IBalanceFreezerTypes {
 /**
  * @title IBalanceFreezerShardConfiguration interface
  * @author CloudWalk Inc. (See https://www.cloudwalk.io)
- * @dev The configuration interface of the contract responsible for sharded storage of data about freezing operations.
+ * @dev The configuration interface of the balance freezer shard contract.
  */
 interface IBalanceFreezerShardConfiguration {
     // ------------------ Events ---------------------------------- //
@@ -106,10 +106,10 @@ interface IBalanceFreezerShardConfiguration {
 /**
  * @title IBalanceFreezerShard interface
  * @author CloudWalk Inc. (See https://www.cloudwalk.io)
- * @dev The interface of the contract responsible for sharded storage of data about freezing operations.
+ * @dev The full interface of the balance freezer shard contract.
  */
 interface IBalanceFreezerShard is
-    IBalanceFreezerShardErrors,
+    IBalanceFreezerShardErrors, // Tools: this comment prevents Prettier from formatting into a single line.
     IBalanceFreezerShardPrimary,
     IBalanceFreezerShardConfiguration
 {}
