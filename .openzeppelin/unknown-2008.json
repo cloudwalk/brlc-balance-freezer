@@ -520,15 +520,15 @@
             "slot": "0",
             "type": "t_address",
             "contract": "BalanceFreezerStorage",
-            "src": "contracts/BalanceFreezerStorage.sol:15"
+            "src": "contracts\\BalanceFreezerStorage.sol:15"
           },
           {
             "label": "_shards",
             "offset": 0,
             "slot": "1",
-            "type": "t_array(t_contract(IBalanceFreezerShard)4033)dyn_storage",
+            "type": "t_array(t_contract(IBalanceFreezerShard)4741)dyn_storage",
             "contract": "BalanceFreezerStorage",
-            "src": "contracts/BalanceFreezerStorage.sol:18"
+            "src": "contracts\\BalanceFreezerStorage.sol:18"
           },
           {
             "label": "__gap",
@@ -536,7 +536,7 @@
             "slot": "2",
             "type": "t_array(t_uint256)48_storage",
             "contract": "BalanceFreezerStorage",
-            "src": "contracts/BalanceFreezerStorage.sol:24"
+            "src": "contracts\\BalanceFreezerStorage.sol:24"
           }
         ],
         "types": {
@@ -624,7 +624,7 @@
             "label": "uint64",
             "numberOfBytes": "8"
           },
-          "t_array(t_contract(IBalanceFreezerShard)4033)dyn_storage": {
+          "t_array(t_contract(IBalanceFreezerShard)4741)dyn_storage": {
             "label": "contract IBalanceFreezerShard[]",
             "numberOfBytes": "32"
           },
@@ -632,7 +632,7 @@
             "label": "uint256[48]",
             "numberOfBytes": "1536"
           },
-          "t_contract(IBalanceFreezerShard)4033": {
+          "t_contract(IBalanceFreezerShard)4741": {
             "label": "contract IBalanceFreezerShard",
             "numberOfBytes": "20"
           },
@@ -647,7 +647,7 @@
               "contract": "PausableUpgradeable",
               "label": "_paused",
               "type": "t_bool",
-              "src": "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol:21",
+              "src": "@openzeppelin\\contracts-upgradeable\\utils\\PausableUpgradeable.sol:21",
               "offset": 0,
               "slot": "0"
             }
@@ -657,7 +657,7 @@
               "contract": "AccessControlUpgradeable",
               "label": "_roles",
               "type": "t_mapping(t_bytes32,t_struct(RoleData)24_storage)",
-              "src": "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol:61",
+              "src": "@openzeppelin\\contracts-upgradeable\\access\\AccessControlUpgradeable.sol:61",
               "offset": 0,
               "slot": "0"
             }
@@ -667,7 +667,7 @@
               "contract": "Initializable",
               "label": "_initialized",
               "type": "t_uint64",
-              "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:69",
+              "src": "@openzeppelin\\contracts-upgradeable\\proxy\\utils\\Initializable.sol:69",
               "offset": 0,
               "slot": "0"
             },
@@ -675,7 +675,7 @@
               "contract": "Initializable",
               "label": "_initializing",
               "type": "t_bool",
-              "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:73",
+              "src": "@openzeppelin\\contracts-upgradeable\\proxy\\utils\\Initializable.sol:73",
               "offset": 8,
               "slot": "0"
             }
@@ -695,7 +695,7 @@
             "slot": "0",
             "type": "t_mapping(t_address,t_bool)",
             "contract": "BalanceFreezerShardStorage",
-            "src": "contracts/BalanceFreezerShardStorage.sol:14"
+            "src": "contracts\\BalanceFreezerShardStorage.sol:14"
           },
           {
             "label": "_operations",
@@ -703,7 +703,7 @@
             "slot": "1",
             "type": "t_mapping(t_bytes32,t_struct(Operation)4760_storage)",
             "contract": "BalanceFreezerShardStorage",
-            "src": "contracts/BalanceFreezerShardStorage.sol:17"
+            "src": "contracts\\BalanceFreezerShardStorage.sol:17"
           },
           {
             "label": "__gap",
@@ -711,7 +711,7 @@
             "slot": "2",
             "type": "t_array(t_uint256)48_storage",
             "contract": "BalanceFreezerShardStorage",
-            "src": "contracts/BalanceFreezerShardStorage.sol:23"
+            "src": "contracts\\BalanceFreezerShardStorage.sol:23"
           }
         ],
         "types": {
@@ -807,7 +807,7 @@
               "contract": "Initializable",
               "label": "_initialized",
               "type": "t_uint64",
-              "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:69",
+              "src": "@openzeppelin\\contracts-upgradeable\\proxy\\utils\\Initializable.sol:69",
               "offset": 0,
               "slot": "0"
             },
@@ -815,7 +815,7 @@
               "contract": "Initializable",
               "label": "_initializing",
               "type": "t_bool",
-              "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:73",
+              "src": "@openzeppelin\\contracts-upgradeable\\proxy\\utils\\Initializable.sol:73",
               "offset": 8,
               "slot": "0"
             }
