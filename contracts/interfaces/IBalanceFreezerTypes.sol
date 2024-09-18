@@ -3,7 +3,7 @@
 pragma solidity ^0.8.0;
 
 /**
- * @title BalanceFreezer types interface
+ * @title IBalanceFreezerTypes interface
  * @author CloudWalk Inc. (See https://www.cloudwalk.io)
  * @dev Defines the types used in the balance freezer contracts.
  */

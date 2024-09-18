@@ -41,7 +41,7 @@ contract BalanceFreezer is
     bytes32 public constant FREEZER_ROLE = keccak256("FREEZER_ROLE");
 
     /// @dev The maximum number of shards.
-    uint256 public constant MAX_SHARD_COUNTER = 100;
+    uint256 public constant MAX_SHARD_COUNT = 100;
 
     // ------------------ Initializers ---------------------------- //
 
@@ -176,7 +176,7 @@ contract BalanceFreezer is
         address to,
         uint256 amount,
         bytes32 txId
-    ) public virtual whenNotPaused onlyRole(FREEZER_ROLE) {
+    ) external whenNotPaused onlyRole(FREEZER_ROLE) {
         _checkAndRegisterOperation(txId, OperationStatus.TransferExecuted, from, amount);
         (uint256 newBalance, uint256 oldBalance) = IERC20Freezable(_token).transferFrozen(from, to, amount);
         emit FrozenBalanceTransfer(from, amount, txId, to);
@@ -189,14 +189,15 @@ contract BalanceFreezer is
      * @dev Requirements:
      *
      * - The caller must have the {OWNER_ROLE} role.
-     * - The maximum number of shards if limited by SHARD_COUNTER.
+     * - The maximum number of shards if limited by {MAX_SHARD_COUNT}.
      */
     function addShards(address[] memory shards) external onlyRole(OWNER_ROLE) {
-        if (_shards.length + shards.length > MAX_SHARD_COUNTER) {
-            revert BalanceFreezer_ShardCounterExcess();
+        if (_shards.length + shards.length > MAX_SHARD_COUNT) {
+            revert BalanceFreezer_ShardCountExcess();
         }
 
-        for (uint256 i; i < shards.length; i++) {
+        uint256 count = shards.length;
+        for (uint256 i; i < count; i++) {
             _shards.push(IBalanceFreezerShard(shards[i]));
             emit ShardAdded(shards[i]);
         }
@@ -210,18 +211,18 @@ contract BalanceFreezer is
      * - The caller must have the {OWNER_ROLE} role.
      */
     function replaceShards(uint256 fromIndex, address[] memory shards) external onlyRole(OWNER_ROLE) {
-        uint256 len = _shards.length;
-        if (fromIndex >= len) {
+        uint256 count = _shards.length;
+        if (fromIndex >= count) {
             return;
         }
-        len -= fromIndex;
-        if (len < shards.length) {
-            revert BalanceFreezer_ShardReplacementCounterExcess();
+        count -= fromIndex;
+        if (count < shards.length) {
+            revert BalanceFreezer_ShardReplacementCountExcess();
         }
-        if (len > shards.length) {
-            len = shards.length;
+        if (count > shards.length) {
+            count = shards.length;
         }
-        for (uint256 i = 0; i < len; i++) {
+        for (uint256 i = 0; i < count; i++) {
             uint256 k = fromIndex + i;
             address oldShard = address(_shards[k]);
             address newShard = shards[i];
@@ -242,15 +243,16 @@ contract BalanceFreezer is
             revert BalanceFreezer_AccountAddressZero();
         }
 
-        uint256 shardCounter = _shards.length;
-        for (uint256 i; i < shardCounter; i++) {
+        uint256 count = _shards.length;
+        for (uint256 i; i < count; i++) {
             _shards[i].configureAdmin(account, status);
         }
 
-        emit ShardAdminConfigured(account, status, shardCounter);
+        emit ShardAdminConfigured(account, status, count);
     }
 
     // ------------------ View functions -------------------------- //
+
     /**
      * @inheritdoc IBalanceFreezerPrimary
      */
@@ -275,7 +277,7 @@ contract BalanceFreezer is
     /**
      * @inheritdoc IBalanceFreezerConfiguration
      */
-    function getShardCounter() external view returns (uint256) {
+    function getShardCount() external view returns (uint256) {
         return _shards.length;
     }
 
@@ -290,17 +292,17 @@ contract BalanceFreezer is
      * @inheritdoc IBalanceFreezerConfiguration
      */
     function getShardRange(uint256 index, uint256 limit) external view returns (address[] memory) {
-        uint256 len = _shards.length;
+        uint256 count = _shards.length;
         address[] memory shards;
-        if (len <= index || limit == 0) {
+        if (count <= index || limit == 0) {
             shards = new address[](0);
         } else {
-            len -= index;
-            if (len > limit) {
-                len = limit;
+            count -= index;
+            if (count > limit) {
+                count = limit;
             }
-            shards = new address[](len);
-            for (uint256 i = 0; i < len; i++) {
+            shards = new address[](count);
+            for (uint256 i = 0; i < count; i++) {
                 shards[i] = address(_shards[index]);
                 index++;
             }
@@ -309,6 +311,7 @@ contract BalanceFreezer is
     }
 
     // ------------------ Internal functions ---------------------- //
+
     /**
      * @dev Checks a shard error and reverts if necessary.
      */
@@ -325,13 +328,13 @@ contract BalanceFreezer is
             revert BalanceFreezer_AmountExcess(amount);
         }
 
-        IBalanceFreezerShard.Error err = _shard(txId).registerOperation(txId, status, account, uint64(amount));
+        uint256 err = _shard(txId).registerOperation(txId, status, account, uint64(amount));
 
-        if (err != IBalanceFreezerShardPrimary.Error.None) {
-            if (err == IBalanceFreezerShardPrimary.Error.OperationAlreadyExecuted) {
+        if (err != uint256(IBalanceFreezerShardPrimary.Error.None)) {
+            if (err == uint256(IBalanceFreezerShardPrimary.Error.OperationAlreadyExecuted)) {
                 revert BalanceFreezer_AlreadyExecuted(txId);
             }
-            revert BalanceFreezer_ShardError(uint256(err), txId);
+            revert BalanceFreezer_UnexpectedShardError(err, txId);
         }
     }
 

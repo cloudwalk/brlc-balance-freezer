@@ -10,7 +10,7 @@ import { IBalanceFreezerTypes } from "./IBalanceFreezerTypes.sol";
  * @dev Defines the custom errors used in the balance freezer contract.
  */
 interface IBalanceFreezerErrors {
-    /// @dev Throws if the provided account address is zero.
+    /// @dev Thrown if the provided account address is zero.
     error BalanceFreezer_AccountAddressZero();
 
     /**
@@ -25,24 +25,24 @@ interface IBalanceFreezerErrors {
      */
     error BalanceFreezer_AmountExcess(uint256 amount);
 
-    /// @dev Throws if the provided root contract address is zero.
+    /// @dev Thrown if the provided root contract address is zero.
     error BalanceFreezer_RootAddressZero();
 
-    /// @dev Throws if the provided shard contract address is zero.
+    /// @dev Thrown if the provided shard contract address is zero.
     error BalanceFreezer_ShardAddressZero();
 
     /// @dev Thrown if the number of shard contracts during their adding exceeds the allowed maximum.
-    error BalanceFreezer_ShardCounterExcess();
+    error BalanceFreezer_ShardCountExcess();
 
     /**
-     * @dev Throws if a shard contract returns an error.
-     * @param err The error code according to the {IBalanceFreezerShard.Error} enum.
+     * @dev Thrown if a shard contract returns an unexpected error.
+     * @param err The error code of the shard contract.
      * @param txId The provided off-chain transaction identifier of the related operation.
      */
-    error BalanceFreezer_ShardError(uint256 err, bytes32 txId);
+    error BalanceFreezer_UnexpectedShardError(uint256 err, bytes32 txId);
 
     /// @dev Thrown if the number of shard contracts to replace is greater than expected.
-    error BalanceFreezer_ShardReplacementCounterExcess();
+    error BalanceFreezer_ShardReplacementCountExcess();
 
     /// @dev Thrown if the provided token address is zero.
     error BalanceFreezer_TokenAddressZero();
@@ -54,7 +54,7 @@ interface IBalanceFreezerErrors {
 /**
  * @title IBalanceFreezerPrimary interface
  * @author CloudWalk Inc. (See https://cloudwalk.io)
- * @dev The primary interface of the contract responsible for freezing operations on the underlying token contract.
+ * @dev The primary interface of the balance freezer contract.
  */
 interface IBalanceFreezerPrimary is IBalanceFreezerTypes {
     // ------------------ Events ---------------------------------- //
@@ -144,7 +144,9 @@ interface IBalanceFreezerPrimary is IBalanceFreezerTypes {
     /**
      * @dev Transfers frozen tokens on behalf of an account.
      *
-     * Emits a {FrozenBalanceTransfer} event.
+     * The transfer decreases the frozen balance of the account by the transferred amount.
+     *
+     * Emits a {FrozenBalanceTransfer} event and a {FrozenBalanceUpdated} event.
      *
      * @param from The account whose tokens will be transferred from.
      * @param to The account whose tokens will be transferred to.
@@ -182,7 +184,7 @@ interface IBalanceFreezerPrimary is IBalanceFreezerTypes {
 /**
  * @title IBalanceFreezerConfiguration interface
  * @author CloudWalk Inc. (See https://cloudwalk.io)
- * @dev The configuration interface of the contract responsible for freezing operations.
+ * @dev The configuration interface of the balance freezer contract.
  */
 interface IBalanceFreezerConfiguration {
     // ------------------ Events ---------------------------------- //
@@ -191,12 +193,12 @@ interface IBalanceFreezerConfiguration {
      * @dev Emitted when a shard admin status of an account is configured on all underlying shard contracts.
      * @param account The address of the account to configure.
      * @param status The new admin status of the account.
-     * @param shardCounter The number of shard contracts on which the admin is configured.
+     * @param count The number of shard contracts on which the admin is configured.
      */
     event ShardAdminConfigured(
         address indexed account, // Tools: this comment prevents Prettier from formatting into a single line.
         bool status,
-        uint256 shardCounter
+        uint256 count
     );
 
     /**
@@ -237,7 +239,7 @@ interface IBalanceFreezerConfiguration {
     /**
      * @dev Returns the number of shard contracts that have been added to the root contract.
      */
-    function getShardCounter() external view returns (uint256);
+    function getShardCount() external view returns (uint256);
 
     /**
      * @dev Returns the shard contract address by the off-chain transaction identifier.
@@ -256,6 +258,10 @@ interface IBalanceFreezerConfiguration {
 /**
  * @title IBalanceFreezer interface
  * @author CloudWalk Inc. (See https://cloudwalk.io)
- * @dev The interface of the contract responsible for freezing operations on the underlying token contract.
+ * @dev The full interface of the balance freezer contract.
  */
-interface IBalanceFreezer is IBalanceFreezerErrors, IBalanceFreezerPrimary, IBalanceFreezerConfiguration {}
+interface IBalanceFreezer is
+    IBalanceFreezerErrors, // Tools: this comment prevents Prettier from formatting into a single line.
+    IBalanceFreezerPrimary,
+    IBalanceFreezerConfiguration
+{}
