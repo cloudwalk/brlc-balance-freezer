@@ -2,11 +2,10 @@
 
 pragma solidity 0.8.24;
 
-import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
-
 import { AccessControlExtUpgradeable } from "./base/AccessControlExtUpgradeable.sol";
 import { PausableExtUpgradeable } from "./base/PausableExtUpgradeable.sol";
 import { RescuableUpgradeable } from "./base/RescuableUpgradeable.sol";
+import { UUPSExtUpgradeable } from "./base/UUPSExtUpgradeable.sol";
 
 import { IBalanceFreezer } from "./interfaces/IBalanceFreezer.sol";
 import { IBalanceFreezerPrimary } from "./interfaces/IBalanceFreezer.sol";
@@ -24,7 +23,7 @@ contract BalanceFreezer is
     AccessControlExtUpgradeable,
     PausableExtUpgradeable,
     RescuableUpgradeable,
-    UUPSUpgradeable,
+    UUPSExtUpgradeable,
     IBalanceFreezer
 {
     // ------------------ Constants ------------------------------- //
@@ -198,6 +197,13 @@ contract BalanceFreezer is
         return _token;
     }
 
+    // ------------------ Pure functions -------------------------- //
+
+    /**
+     * @inheritdoc IBalanceFreezerPrimary
+     */
+    function proveBalanceFreezer() external pure {}
+
     // ------------------ Internal functions ---------------------- //
 
     /**
@@ -228,11 +234,13 @@ contract BalanceFreezer is
     }
 
     /**
-     * @dev The upgrade authorization function for UUPSProxy.
+     * @dev The upgrade validation function for the UUPSExtUpgradeable contract.
      * @param newImplementation The address of the new implementation.
      */
-    function _authorizeUpgrade(address newImplementation) internal view override onlyRole(OWNER_ROLE) {
-        newImplementation; // Suppresses a compiler warning about the unused variable.
+    function _validateUpgrade(address newImplementation) internal view override onlyRole(OWNER_ROLE) {
+        try IBalanceFreezer(newImplementation).proveBalanceFreezer() {} catch {
+            revert BalanceFreezer_ImplementationAddressInvalid();
+        }
     }
 
     // ------------------ Service functions ----------------------- //
