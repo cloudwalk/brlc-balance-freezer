@@ -22,6 +22,9 @@ interface IBalanceFreezerErrors {
      */
     error BalanceFreezer_AmountExcess(uint256 amount);
 
+    /// @dev Thrown if the provided new implementation address is not of a balance freezer contract.
+    error BalanceFreezer_ImplementationAddressInvalid();
+
     /// @dev Thrown if the provided token address is zero.
     error BalanceFreezer_TokenAddressZero();
 
@@ -157,6 +160,11 @@ interface IBalanceFreezerPrimary is IBalanceFreezerTypes {
      * @dev Returns the address of the underlying token contract.
      */
     function underlyingToken() external view returns (address);
+
+    /**
+     * @dev Proves the contract is the balance freezer one. A marker function.
+     */
+    function proveBalanceFreezer() external pure;
 }
 
 /**

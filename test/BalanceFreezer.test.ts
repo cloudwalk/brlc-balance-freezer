@@ -95,6 +95,7 @@ describe("Contracts 'BalanceFreezer'", async () => {
 
   // Errors of the contracts under test
   const REVERT_ERROR_IF_AMOUNT_EXCESS = "BalanceFreezer_AmountExcess";
+  const REVERT_ERROR_IF_IMPLEMENTATION_ADDRESS_INVALID = "BalanceFreezer_ImplementationAddressInvalid";
   const REVERT_ERROR_IF_OPERATION_ALREADY_EXECUTED = "BalanceFreezer_AlreadyExecuted";
   const REVERT_ERROR_IF_TOKEN_ADDRESS_IS_ZERO = "BalanceFreezer_TokenAddressZero";
   const REVERT_ERROR_IF_TX_ID_IS_ZERO = "BalanceFreezer_TxIdZero";
@@ -275,7 +276,7 @@ describe("Contracts 'BalanceFreezer'", async () => {
     it("Is reverted if the caller does not have the owner role", async () => {
       const { freezerContract } = await setUpFixture(deployContracts);
 
-      await expect(connect(freezerContract, user).upgradeToAndCall(user.address, "0x"))
+      await expect(connect(freezerContract, user).upgradeToAndCall(getAddress(freezerContract), "0x"))
         .to.be.revertedWithCustomError(freezerContract, REVERT_ERROR_IF_UNAUTHORIZED_ACCOUNT)
         .withArgs(user.address, ownerRole);
     });
@@ -290,9 +291,16 @@ describe("Contracts 'BalanceFreezer'", async () => {
     it("Is reverted if the caller does not have the owner role", async () => {
       const { freezerContract } = await setUpFixture(deployContracts);
 
-      await expect(connect(freezerContract, user).upgradeTo(user.address))
+      await expect(connect(freezerContract, user).upgradeTo(getAddress(freezerContract)))
         .to.be.revertedWithCustomError(freezerContract, REVERT_ERROR_IF_UNAUTHORIZED_ACCOUNT)
         .withArgs(user.address, ownerRole);
+    });
+
+    it("Is reverted if the provided implementation address is not a balance freezer contract", async () => {
+      const { freezerContract, tokenMock } = await setUpFixture(deployContracts);
+
+      await expect(freezerContract.upgradeTo(getAddress(tokenMock)))
+        .to.be.revertedWithCustomError(freezerContract, REVERT_ERROR_IF_IMPLEMENTATION_ADDRESS_INVALID);
     });
   });
 
