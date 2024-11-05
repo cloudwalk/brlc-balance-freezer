@@ -6,12 +6,14 @@ import { AccessControlExtUpgradeable } from "./base/AccessControlExtUpgradeable.
 import { PausableExtUpgradeable } from "./base/PausableExtUpgradeable.sol";
 import { RescuableUpgradeable } from "./base/RescuableUpgradeable.sol";
 import { UUPSExtUpgradeable } from "./base/UUPSExtUpgradeable.sol";
+import { Versionable } from "./base/Versionable.sol";
 
 import { IBalanceFreezer } from "./interfaces/IBalanceFreezer.sol";
 import { IBalanceFreezerPrimary } from "./interfaces/IBalanceFreezer.sol";
 import { IERC20Freezable } from "./interfaces/IERC20Freezable.sol";
 
 import { BalanceFreezerStorage } from "./BalanceFreezerStorage.sol";
+
 
 /**
  * @title BalanceFreezer contract
@@ -24,7 +26,8 @@ contract BalanceFreezer is
     PausableExtUpgradeable,
     RescuableUpgradeable,
     UUPSExtUpgradeable,
-    IBalanceFreezer
+    IBalanceFreezer,
+    Versionable
 {
     // ------------------ Constants ------------------------------- //
 
