@@ -713,6 +713,7 @@ describe("Contracts 'BalanceFreezer'", async () => {
       expect(actualBalance).to.equal(expectedBalance);
     });
   });
+
   describe("Function '$__VERSION()'", async () => {
     it("Returns expected values", async () => {
       const { freezerContract } = await setUpFixture(deployAndConfigureContracts);
