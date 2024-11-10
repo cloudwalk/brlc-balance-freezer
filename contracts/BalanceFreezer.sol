@@ -7,6 +7,7 @@ import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils
 import { AccessControlExtUpgradeable } from "./base/AccessControlExtUpgradeable.sol";
 import { PausableExtUpgradeable } from "./base/PausableExtUpgradeable.sol";
 import { RescuableUpgradeable } from "./base/RescuableUpgradeable.sol";
+import { Versionable } from "./base/Versionable.sol";
 
 import { IBalanceFreezer } from "./interfaces/IBalanceFreezer.sol";
 import { IBalanceFreezerPrimary } from "./interfaces/IBalanceFreezer.sol";
@@ -25,7 +26,8 @@ contract BalanceFreezer is
     PausableExtUpgradeable,
     RescuableUpgradeable,
     UUPSUpgradeable,
-    IBalanceFreezer
+    IBalanceFreezer,
+    Versionable
 {
     // ------------------ Constants ------------------------------- //
 

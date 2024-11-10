@@ -15,6 +15,14 @@ enum OperationStatus {
   UpdateReplacementExecuted = 4
 }
 
+interface Version {
+  major: number;
+  minor: number;
+  patch: number;
+
+  [key: string]: number; // Indexing signature to ensure that fields are iterated over in a key-value style
+}
+
 interface Operation {
   status: OperationStatus;
   account: string;
@@ -98,6 +106,12 @@ describe("Contracts 'BalanceFreezer'", async () => {
   const EVENT_NAME_MOCK_CALL_FREEZE_INCREASE = "MockCallFreezeIncrease";
   const EVENT_NAME_MOCK_CALL_FREEZE_DECREASE = "MockCallFreezeDecrease";
   const EVENT_NAME_MOCK_CALL_TRANSFER_FROZEN = "MockCallTransferFrozen";
+
+  const EXPECTED_VERSION: Version = {
+    major: 1,
+    minor: 0,
+    patch: 0
+  };
 
   let freezerContractFactory: ContractFactory;
   let tokenMockFactory: ContractFactory;
@@ -697,6 +711,14 @@ describe("Contracts 'BalanceFreezer'", async () => {
       const expectedBalance: bigint = BigInt(await tokenMock.OLD_FROZEN_BALANCE_MOCK()) + BigInt(user.address);
       const actualBalance = await freezerContract.balanceOfFrozen(user.address);
       expect(actualBalance).to.equal(expectedBalance);
+    });
+  });
+
+  describe("Function '$__VERSION()'", async () => {
+    it("Returns expected values", async () => {
+      const { freezerContract } = await setUpFixture(deployAndConfigureContracts);
+      const tokenVersion = await freezerContract.$__VERSION();
+      checkEquality(tokenVersion, EXPECTED_VERSION);
     });
   });
 });

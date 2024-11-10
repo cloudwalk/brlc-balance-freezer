@@ -8,12 +8,11 @@ async function main() {
   const proxy = await upgrades.deployProxy(
     factory,
     [TOKEN_ADDRESS],
-    { kind: "uups" }
-  );
+    { kind: "uups" });
 
   await proxy.waitForDeployment();
 
-  console.log("Root proxy deployed to:", proxy.target);
+  console.log("Proxy deployed:", await proxy.getAddress());
 }
 
 main().then().catch(err => {
