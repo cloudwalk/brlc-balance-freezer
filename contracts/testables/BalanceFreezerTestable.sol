@@ -23,6 +23,6 @@ contract BalanceFreezerTestable is BalanceFreezer {
      * has the 'onlyInitializing' modifier.
      */
     function call_parent_initialize_unchained(address token_) public {
-        __BalanceFreezer_init_init_unchained(token_);
+        __BalanceFreezer_init_unchained(token_);
     }
 }

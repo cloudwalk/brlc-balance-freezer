@@ -66,7 +66,7 @@ contract BalanceFreezer is
         __Rescuable_init_unchained(OWNER_ROLE);
         __UUPSUpgradeable_init_unchained();
 
-        __BalanceFreezer_init_init_unchained(token_);
+        __BalanceFreezer_init_unchained(token_);
     }
 
     /**
@@ -80,7 +80,7 @@ contract BalanceFreezer is
      *
      * @param token_ The address of the token to set as the underlying one.
      */
-    function __BalanceFreezer_init_init_unchained(address token_) internal onlyInitializing {
+    function __BalanceFreezer_init_unchained(address token_) internal onlyInitializing {
         if (token_ == address(0)) {
             revert BalanceFreezer_TokenAddressZero();
         }
