@@ -8,7 +8,8 @@ async function main() {
   const proxy = await upgrades.deployProxy(
     factory,
     [TOKEN_ADDRESS],
-    { kind: "uups" });
+    { kind: "uups" }
+  );
 
   await proxy.waitForDeployment();
 
