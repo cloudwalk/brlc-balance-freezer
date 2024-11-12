@@ -2,12 +2,11 @@
 
 pragma solidity 0.8.24;
 
-import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
-
 import { AccessControlExtUpgradeable } from "./base/AccessControlExtUpgradeable.sol";
 import { PausableExtUpgradeable } from "./base/PausableExtUpgradeable.sol";
 import { RescuableUpgradeable } from "./base/RescuableUpgradeable.sol";
 import { Versionable } from "./base/Versionable.sol";
+import { UUPSExtUpgradeable } from "./base/UUPSExtUpgradeable.sol";
 
 import { DispatcherStorage } from "./DispatcherStorage.sol";
 
@@ -27,13 +26,18 @@ contract Dispatcher is
     AccessControlExtUpgradeable,
     PausableExtUpgradeable,
     RescuableUpgradeable,
-    UUPSUpgradeable,
+    UUPSExtUpgradeable,
     Versionable
 {
     // ------------------ Constants ------------------------------- //
 
     /// @dev The role of this contract owner.
     bytes32 public constant OWNER_ROLE = keccak256("OWNER_ROLE");
+
+    // ------------------ Errors ---------------------------------- //
+
+    /// @dev Thrown if the provided new implementation address is not of a dispatcher contract.
+    error Dispatcher_ImplementationAddressInvalid();
 
     // ------------------ Initializers ---------------------------- //
 
@@ -118,14 +122,23 @@ contract Dispatcher is
         }
     }
 
+    // ------------------ Pure functions -------------------------- //
+
+    /**
+     * @dev Proves the contract is the dispatcher one. A marker function.
+     */
+    function proveDispatcher() external pure {}
+
     // ------------------ Internal functions ---------------------- //
 
     /**
-     * @dev The upgrade authorization function for UUPSProxy.
+     * @dev The upgrade validation function for the UUPSExtUpgradeable contract.
      * @param newImplementation The address of the new implementation.
      */
-    function _authorizeUpgrade(address newImplementation) internal view override onlyRole(OWNER_ROLE) {
-        newImplementation; // Suppresses a compiler warning about the unused variable.
+    function _validateUpgrade(address newImplementation) internal view override onlyRole(OWNER_ROLE) {
+        try Dispatcher(newImplementation).proveDispatcher() {} catch {
+            revert Dispatcher_ImplementationAddressInvalid();
+        }
     }
 
     // ------------------ Service functions ----------------------- //
