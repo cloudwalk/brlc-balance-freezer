@@ -2,7 +2,7 @@ apiVersion: backstage.io/v1alpha1
 kind: Component
 metadata:
   name: brlc-balance-freezer
-  description: BRLC balance freezer smart contracts
+  description: Balance freezer smart contracts
   annotations:
     github.com/project-slug: cloudwalk/brlc-balance-freezer
     backstage.io/techdocs-ref: dir:.
