@@ -123,6 +123,7 @@ describe("Contracts 'BalanceFreezer'", async () => {
   let users: HardhatEthersSigner[];
 
   const ownerRole: string = ethers.id("OWNER_ROLE");
+  const grantorRole: string = ethers.id("GRANTOR_ROLE");
   const pauserRole: string = ethers.id("PAUSER_ROLE");
   const rescuerRole: string = ethers.id("RESCUER_ROLE");
   const freezerRole: string = ethers.id("FREEZER_ROLE");
@@ -166,6 +167,7 @@ describe("Contracts 'BalanceFreezer'", async () => {
     const fixture = await deployContracts();
     const { freezerContract } = fixture;
 
+    await proveTx(freezerContract.grantRole(grantorRole, deployer.address));
     await proveTx(freezerContract.grantRole(freezerRole, freezer.address));
 
     return fixture;
@@ -214,6 +216,7 @@ describe("Contracts 'BalanceFreezer'", async () => {
       expect(await freezerContract.underlyingToken()).to.equal(getAddress(tokenMock));
 
       // Role hashes
+      expect(await freezerContract.GRANTOR_ROLE()).to.equal(grantorRole);
       expect(await freezerContract.OWNER_ROLE()).to.equal(ownerRole);
       expect(await freezerContract.PAUSER_ROLE()).to.equal(pauserRole);
       expect(await freezerContract.RESCUER_ROLE()).to.equal(rescuerRole);
@@ -221,12 +224,14 @@ describe("Contracts 'BalanceFreezer'", async () => {
 
       // The role admins
       expect(await freezerContract.getRoleAdmin(ownerRole)).to.equal(ownerRole);
-      expect(await freezerContract.getRoleAdmin(pauserRole)).to.equal(ownerRole);
-      expect(await freezerContract.getRoleAdmin(rescuerRole)).to.equal(ownerRole);
-      expect(await freezerContract.getRoleAdmin(freezerRole)).to.equal(ownerRole);
+      expect(await freezerContract.getRoleAdmin(grantorRole)).to.equal(ownerRole);
+      expect(await freezerContract.getRoleAdmin(pauserRole)).to.equal(grantorRole);
+      expect(await freezerContract.getRoleAdmin(rescuerRole)).to.equal(grantorRole);
+      expect(await freezerContract.getRoleAdmin(freezerRole)).to.equal(grantorRole);
 
       // The deployer should have the owner role, but not the other roles
       expect(await freezerContract.hasRole(ownerRole, deployer.address)).to.equal(true);
+      expect(await freezerContract.hasRole(grantorRole, deployer.address)).to.equal(false);
       expect(await freezerContract.hasRole(pauserRole, deployer.address)).to.equal(false);
       expect(await freezerContract.hasRole(rescuerRole, deployer.address)).to.equal(false);
       expect(await freezerContract.hasRole(freezerRole, deployer.address)).to.equal(false);

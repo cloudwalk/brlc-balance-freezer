@@ -30,9 +30,6 @@ contract BalanceFreezer is
 {
     // ------------------ Constants ------------------------------- //
 
-    /// @dev The role of this contract owner.
-    bytes32 public constant OWNER_ROLE = keccak256("OWNER_ROLE");
-
     /// @dev The role of freezer that is allowed to update and transfer the frozen balance of accounts.
     bytes32 public constant FREEZER_ROLE = keccak256("FREEZER_ROLE");
 
@@ -62,8 +59,8 @@ contract BalanceFreezer is
         __AccessControl_init_unchained();
         __AccessControlExt_init_unchained();
         __Pausable_init_unchained();
-        __PausableExt_init_unchained(OWNER_ROLE);
-        __Rescuable_init_unchained(OWNER_ROLE);
+        __PausableExt_init_unchained();
+        __Rescuable_init_unchained();
         __UUPSUpgradeable_init_unchained();
 
         __BalanceFreezer_init_unchained(token_);
@@ -87,8 +84,7 @@ contract BalanceFreezer is
 
         _token = token_;
 
-        _setRoleAdmin(OWNER_ROLE, OWNER_ROLE);
-        _setRoleAdmin(FREEZER_ROLE, OWNER_ROLE);
+        _setRoleAdmin(FREEZER_ROLE, GRANTOR_ROLE);
         _grantRole(OWNER_ROLE, _msgSender());
     }
 
