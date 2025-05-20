@@ -75,7 +75,7 @@ interface IBalanceFreezerPrimary is IBalanceFreezerTypes {
         address indexed to
     );
 
-    // ------------------ Functions ------------------------------- //
+    // ------------------ Transactional functions ----------------- //
 
     /**
      * @dev Updates the frozen balance of an account.
@@ -141,6 +141,8 @@ interface IBalanceFreezerPrimary is IBalanceFreezerTypes {
         bytes32 txId
     ) external;
 
+    // ------------------ View functions -------------------------- //
+
     /**
      * @dev Returns the data of a single freezing operation.
      * @param txId The off-chain transaction identifier of the operation.
@@ -160,6 +162,8 @@ interface IBalanceFreezerPrimary is IBalanceFreezerTypes {
      * @dev Returns the address of the underlying token contract.
      */
     function underlyingToken() external view returns (address);
+
+    // ------------------ Pure functions -------------------------- //
 
     /**
      * @dev Proves the contract is the balance freezer one. A marker function.

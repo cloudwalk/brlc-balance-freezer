@@ -58,7 +58,7 @@ contract BalanceFreezer is
         _grantRole(OWNER_ROLE, _msgSender());
     }
 
-    // ------------------ Functions ------------------------------- //
+    // ------------------ Transactional functions ----------------- //
 
     /**
      * @inheritdoc IBalanceFreezerPrimary

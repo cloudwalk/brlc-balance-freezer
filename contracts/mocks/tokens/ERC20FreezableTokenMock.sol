@@ -9,9 +9,11 @@ import { IERC20Freezable } from "../../interfaces/IERC20Freezable.sol";
 /**
  * @title ERC20TokenMock contract
  * @author CloudWalk Inc. (See https://www.cloudwalk.io)
- * @dev An implementation of the {ERC20Upgradeable} contract for testing purposes.
+ * @dev An implementation of the {ERC20Upgradeable} contract that supports freezing operations for testing purposes.
  */
 contract ERC20FreezableTokenMock is ERC20, IERC20Freezable {
+    // ------------------ Constants ------------------------------- //
+
     uint256 public constant OLD_FROZEN_BALANCE_MOCK = uint256(uint64(type(int64).max));
 
     // ------------------ Events ---------------------------------- //
@@ -50,7 +52,7 @@ contract ERC20FreezableTokenMock is ERC20, IERC20Freezable {
      */
     constructor(string memory name_, string memory symbol_) ERC20(name_, symbol_) {}
 
-    // ------------------ Functions ------------------------------- //
+    // ------------------ Transactional functions ----------------- //
 
     /**
      * @dev Calls the appropriate internal function to mint needed amount of tokens for an account.
@@ -129,6 +131,8 @@ contract ERC20FreezableTokenMock is ERC20, IERC20Freezable {
         return _decreaseFrozen(amount);
     }
 
+    // ------------------ View functions -------------------------- //
+
     /**
      * @dev Simulates the "balanceOfFrozen()" function by emitting the const value.
      *
@@ -138,6 +142,8 @@ contract ERC20FreezableTokenMock is ERC20, IERC20Freezable {
     function balanceOfFrozen(address account) external pure returns (uint256) {
         return OLD_FROZEN_BALANCE_MOCK + uint256(uint160(account));
     }
+
+    // ------------------ Internal functions ---------------------- //
 
     /// @dev Calculates and returns mock frozen balances internally;
     function _decreaseFrozen(uint256 amount) internal pure returns (uint256 newBalance, uint256 oldBalance) {
