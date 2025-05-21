@@ -230,7 +230,7 @@ describe("Contracts 'BalanceFreezer'", async () => {
 
       await expect(
         anotherFreezerContract.initialize(ADDRESS_ZERO)
-      ).to.be.revertedWithCustomError(freezerContractFactory, REVERT_ERROR_TOKEN_ADDRESS_IS_ZERO);
+      ).to.be.revertedWithCustomError(anotherFreezerContract, REVERT_ERROR_TOKEN_ADDRESS_IS_ZERO);
     });
   });
 
