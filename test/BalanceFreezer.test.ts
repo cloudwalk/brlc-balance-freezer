@@ -1,9 +1,9 @@
-import { ethers, network, upgrades } from "hardhat";
+import { ethers, upgrades } from "hardhat";
 import { expect } from "chai";
 import { Contract, ContractFactory } from "ethers";
 import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
-import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { checkContractUupsUpgrading, connect, getAddress, proveTx } from "../test-utils/eth";
+import { checkEquality, maxUintForBits, setUpFixture } from "../test-utils/common";
 
 const ADDRESS_ZERO = ethers.ZeroAddress;
 
@@ -47,28 +47,6 @@ interface Fixture {
   tokenMock: Contract;
 }
 
-function checkEquality<T extends Record<string, unknown>>(actualObject: T, expectedObject: T, index?: number) {
-  const indexString = !index ? "" : ` with index: ${index}`;
-  Object.keys(expectedObject).forEach(property => {
-    const value = actualObject[property];
-    if (typeof value === "undefined" || typeof value === "function" || typeof value === "object") {
-      throw Error(`Property "${property}" is not found in the actual object` + indexString);
-    }
-    expect(value).to.eq(
-      expectedObject[property],
-      `Mismatch in the "${property}" property between the actual object and expected one` + indexString
-    );
-  });
-}
-
-async function setUpFixture<T>(func: () => Promise<T>): Promise<T> {
-  if (network.name === "hardhat") {
-    return loadFixture(func);
-  } else {
-    return func();
-  }
-}
-
 describe("Contracts 'BalanceFreezer'", async () => {
   const TX_ID_ARRAY: string[] = [
     ethers.encodeBytes32String("MOCK TX_ID 1"),
@@ -88,17 +66,16 @@ describe("Contracts 'BalanceFreezer'", async () => {
   ];
 
   // Errors of the lib contracts
-  const REVERT_ERROR_IF_CONTRACT_INITIALIZATION_IS_INVALID = "InvalidInitialization";
-  const REVERT_ERROR_IF_CONTRACT_IS_NOT_INITIALIZING = "NotInitializing";
-  const REVERT_ERROR_IF_CONTRACT_IS_PAUSED = "EnforcedPause";
-  const REVERT_ERROR_IF_UNAUTHORIZED_ACCOUNT = "AccessControlUnauthorizedAccount";
+  const REVERT_ERROR_CONTRACT_INITIALIZATION_IS_INVALID = "InvalidInitialization";
+  const REVERT_ERROR_CONTRACT_IS_PAUSED = "EnforcedPause";
+  const REVERT_ERROR_UNAUTHORIZED_ACCOUNT = "AccessControlUnauthorizedAccount";
 
   // Errors of the contracts under test
-  const REVERT_ERROR_IF_AMOUNT_EXCESS = "BalanceFreezer_AmountExcess";
-  const REVERT_ERROR_IF_IMPLEMENTATION_ADDRESS_INVALID = "BalanceFreezer_ImplementationAddressInvalid";
-  const REVERT_ERROR_IF_OPERATION_ALREADY_EXECUTED = "BalanceFreezer_AlreadyExecuted";
-  const REVERT_ERROR_IF_TOKEN_ADDRESS_IS_ZERO = "BalanceFreezer_TokenAddressZero";
-  const REVERT_ERROR_IF_TX_ID_IS_ZERO = "BalanceFreezer_TxIdZero";
+  const REVERT_ERROR_AMOUNT_EXCESS = "BalanceFreezer_AmountExcess";
+  const REVERT_ERROR_IMPLEMENTATION_ADDRESS_INVALID = "BalanceFreezer_ImplementationAddressInvalid";
+  const REVERT_ERROR_OPERATION_ALREADY_EXECUTED = "BalanceFreezer_AlreadyExecuted";
+  const REVERT_ERROR_TOKEN_ADDRESS_IS_ZERO = "BalanceFreezer_TokenAddressZero";
+  const REVERT_ERROR_TX_ID_IS_ZERO = "BalanceFreezer_TxIdZero";
 
   // Events of the contracts under test
   const EVENT_NAME_FROZEN_BALANCE_TRANSFER = "FrozenBalanceTransfer";
@@ -122,11 +99,11 @@ describe("Contracts 'BalanceFreezer'", async () => {
   let user: HardhatEthersSigner;
   let users: HardhatEthersSigner[];
 
-  const ownerRole: string = ethers.id("OWNER_ROLE");
-  const grantorRole: string = ethers.id("GRANTOR_ROLE");
-  const pauserRole: string = ethers.id("PAUSER_ROLE");
-  const rescuerRole: string = ethers.id("RESCUER_ROLE");
-  const freezerRole: string = ethers.id("FREEZER_ROLE");
+  const OWNER_ROLE: string = ethers.id("OWNER_ROLE");
+  const GRANTOR_ROLE: string = ethers.id("GRANTOR_ROLE");
+  const PAUSER_ROLE: string = ethers.id("PAUSER_ROLE");
+  const RESCUER_ROLE: string = ethers.id("RESCUER_ROLE");
+  const FREEZER_ROLE: string = ethers.id("FREEZER_ROLE");
 
   before(async () => {
     let moreUsers: HardhatEthersSigner[];
@@ -144,7 +121,7 @@ describe("Contracts 'BalanceFreezer'", async () => {
     const name = "ERC20 Test";
     const symbol = "TEST";
 
-    let tokenMock: Contract = await tokenMockFactory.deploy(name, symbol) as Contract;
+    let tokenMock = await tokenMockFactory.deploy(name, symbol) as Contract;
     await tokenMock.waitForDeployment();
     tokenMock = connect(tokenMock, deployer); // Explicitly specifying the initial account
 
@@ -153,7 +130,7 @@ describe("Contracts 'BalanceFreezer'", async () => {
 
   async function deployContracts(): Promise<Fixture> {
     const tokenMock = await deployTokenMock();
-    let freezerContract: Contract = await upgrades.deployProxy(freezerContractFactory, [getAddress(tokenMock)]);
+    let freezerContract = await upgrades.deployProxy(freezerContractFactory, [getAddress(tokenMock)]) as Contract;
     await freezerContract.waitForDeployment();
     freezerContract = connect(freezerContract, deployer); // Explicitly specifying the initial account
 
@@ -167,8 +144,8 @@ describe("Contracts 'BalanceFreezer'", async () => {
     const fixture = await deployContracts();
     const { freezerContract } = fixture;
 
-    await proveTx(freezerContract.grantRole(grantorRole, deployer.address));
-    await proveTx(freezerContract.grantRole(freezerRole, freezer.address));
+    await proveTx(freezerContract.grantRole(GRANTOR_ROLE, deployer.address));
+    await proveTx(freezerContract.grantRole(FREEZER_ROLE, freezer.address));
 
     return fixture;
   }
@@ -191,7 +168,7 @@ describe("Contracts 'BalanceFreezer'", async () => {
   }
 
   async function pauseContract(contract: Contract) {
-    await proveTx(contract.grantRole(pauserRole, deployer.address));
+    await proveTx(contract.grantRole(PAUSER_ROLE, deployer.address));
     await proveTx(contract.pause());
   }
 
@@ -216,25 +193,25 @@ describe("Contracts 'BalanceFreezer'", async () => {
       expect(await freezerContract.underlyingToken()).to.equal(getAddress(tokenMock));
 
       // Role hashes
-      expect(await freezerContract.GRANTOR_ROLE()).to.equal(grantorRole);
-      expect(await freezerContract.OWNER_ROLE()).to.equal(ownerRole);
-      expect(await freezerContract.PAUSER_ROLE()).to.equal(pauserRole);
-      expect(await freezerContract.RESCUER_ROLE()).to.equal(rescuerRole);
-      expect(await freezerContract.FREEZER_ROLE()).to.equal(freezerRole);
+      expect(await freezerContract.GRANTOR_ROLE()).to.equal(GRANTOR_ROLE);
+      expect(await freezerContract.OWNER_ROLE()).to.equal(OWNER_ROLE);
+      expect(await freezerContract.PAUSER_ROLE()).to.equal(PAUSER_ROLE);
+      expect(await freezerContract.RESCUER_ROLE()).to.equal(RESCUER_ROLE);
+      expect(await freezerContract.FREEZER_ROLE()).to.equal(FREEZER_ROLE);
 
       // The role admins
-      expect(await freezerContract.getRoleAdmin(ownerRole)).to.equal(ownerRole);
-      expect(await freezerContract.getRoleAdmin(grantorRole)).to.equal(ownerRole);
-      expect(await freezerContract.getRoleAdmin(pauserRole)).to.equal(grantorRole);
-      expect(await freezerContract.getRoleAdmin(rescuerRole)).to.equal(grantorRole);
-      expect(await freezerContract.getRoleAdmin(freezerRole)).to.equal(grantorRole);
+      expect(await freezerContract.getRoleAdmin(OWNER_ROLE)).to.equal(OWNER_ROLE);
+      expect(await freezerContract.getRoleAdmin(GRANTOR_ROLE)).to.equal(OWNER_ROLE);
+      expect(await freezerContract.getRoleAdmin(PAUSER_ROLE)).to.equal(GRANTOR_ROLE);
+      expect(await freezerContract.getRoleAdmin(RESCUER_ROLE)).to.equal(GRANTOR_ROLE);
+      expect(await freezerContract.getRoleAdmin(FREEZER_ROLE)).to.equal(GRANTOR_ROLE);
 
       // The deployer should have the owner role, but not the other roles
-      expect(await freezerContract.hasRole(ownerRole, deployer.address)).to.equal(true);
-      expect(await freezerContract.hasRole(grantorRole, deployer.address)).to.equal(false);
-      expect(await freezerContract.hasRole(pauserRole, deployer.address)).to.equal(false);
-      expect(await freezerContract.hasRole(rescuerRole, deployer.address)).to.equal(false);
-      expect(await freezerContract.hasRole(freezerRole, deployer.address)).to.equal(false);
+      expect(await freezerContract.hasRole(OWNER_ROLE, deployer.address)).to.equal(true);
+      expect(await freezerContract.hasRole(GRANTOR_ROLE, deployer.address)).to.equal(false);
+      expect(await freezerContract.hasRole(PAUSER_ROLE, deployer.address)).to.equal(false);
+      expect(await freezerContract.hasRole(RESCUER_ROLE, deployer.address)).to.equal(false);
+      expect(await freezerContract.hasRole(FREEZER_ROLE, deployer.address)).to.equal(false);
 
       // The initial contract state is unpaused
       expect(await freezerContract.paused()).to.equal(false);
@@ -244,17 +221,16 @@ describe("Contracts 'BalanceFreezer'", async () => {
       const { freezerContract, tokenMock } = await setUpFixture(deployContracts);
       await expect(
         freezerContract.initialize(getAddress(tokenMock))
-      ).to.be.revertedWithCustomError(freezerContract, REVERT_ERROR_IF_CONTRACT_INITIALIZATION_IS_INVALID);
+      ).to.be.revertedWithCustomError(freezerContract, REVERT_ERROR_CONTRACT_INITIALIZATION_IS_INVALID);
     });
 
     it("Is reverted if the passed token address is zero", async () => {
-      const anotherFreezerContract: Contract = await upgrades.deployProxy(freezerContractFactory, [], {
-        initializer: false
-      });
+      const anotherFreezerContract =
+        await upgrades.deployProxy(freezerContractFactory, [], { initializer: false }) as Contract;
 
       await expect(
         anotherFreezerContract.initialize(ADDRESS_ZERO)
-      ).to.be.revertedWithCustomError(freezerContractFactory, REVERT_ERROR_IF_TOKEN_ADDRESS_IS_ZERO);
+      ).to.be.revertedWithCustomError(freezerContractFactory, REVERT_ERROR_TOKEN_ADDRESS_IS_ZERO);
     });
   });
 
@@ -268,8 +244,8 @@ describe("Contracts 'BalanceFreezer'", async () => {
       const { freezerContract } = await setUpFixture(deployContracts);
 
       await expect(connect(freezerContract, user).upgradeToAndCall(getAddress(freezerContract), "0x"))
-        .to.be.revertedWithCustomError(freezerContract, REVERT_ERROR_IF_UNAUTHORIZED_ACCOUNT)
-        .withArgs(user.address, ownerRole);
+        .to.be.revertedWithCustomError(freezerContract, REVERT_ERROR_UNAUTHORIZED_ACCOUNT)
+        .withArgs(user.address, OWNER_ROLE);
     });
   });
 
@@ -283,15 +259,15 @@ describe("Contracts 'BalanceFreezer'", async () => {
       const { freezerContract } = await setUpFixture(deployContracts);
 
       await expect(connect(freezerContract, user).upgradeTo(getAddress(freezerContract)))
-        .to.be.revertedWithCustomError(freezerContract, REVERT_ERROR_IF_UNAUTHORIZED_ACCOUNT)
-        .withArgs(user.address, ownerRole);
+        .to.be.revertedWithCustomError(freezerContract, REVERT_ERROR_UNAUTHORIZED_ACCOUNT)
+        .withArgs(user.address, OWNER_ROLE);
     });
 
     it("Is reverted if the provided implementation address is not a balance freezer contract", async () => {
       const { freezerContract, tokenMock } = await setUpFixture(deployContracts);
 
       await expect(freezerContract.upgradeTo(getAddress(tokenMock)))
-        .to.be.revertedWithCustomError(freezerContract, REVERT_ERROR_IF_IMPLEMENTATION_ADDRESS_INVALID);
+        .to.be.revertedWithCustomError(freezerContract, REVERT_ERROR_IMPLEMENTATION_ADDRESS_INVALID);
     });
   });
 
@@ -342,15 +318,20 @@ describe("Contracts 'BalanceFreezer'", async () => {
       const [operation] = defineTestOperations();
       await pauseContract(freezerContract);
       await expect(connect(freezerContract, freezer).freeze(operation.account, operation.amount, operation.txId))
-        .to.be.revertedWithCustomError(freezerContract, REVERT_ERROR_IF_CONTRACT_IS_PAUSED);
+        .to.be.revertedWithCustomError(freezerContract, REVERT_ERROR_CONTRACT_IS_PAUSED);
     });
 
     it("Is reverted if the caller does not have the freezer role", async () => {
       const { freezerContract } = await setUpFixture(deployAndConfigureContracts);
       const [operation] = defineTestOperations();
+
+      await expect(connect(freezerContract, user).freeze(operation.account, operation.amount, operation.txId))
+        .to.be.revertedWithCustomError(freezerContract, REVERT_ERROR_UNAUTHORIZED_ACCOUNT)
+        .withArgs(user.address, FREEZER_ROLE);
+
       await expect(connect(freezerContract, deployer).freeze(operation.account, operation.amount, operation.txId))
-        .to.be.revertedWithCustomError(freezerContract, REVERT_ERROR_IF_UNAUTHORIZED_ACCOUNT)
-        .withArgs(deployer.address, freezerRole);
+        .to.be.revertedWithCustomError(freezerContract, REVERT_ERROR_UNAUTHORIZED_ACCOUNT)
+        .withArgs(deployer.address, FREEZER_ROLE);
     });
 
     it("Is reverted if the provided off-chain transaction identifier is zero", async () => {
@@ -358,15 +339,15 @@ describe("Contracts 'BalanceFreezer'", async () => {
       const [operation] = defineTestOperations();
       operation.txId = TX_ID_ZERO;
       await expect(connect(freezerContract, freezer).freeze(operation.account, operation.amount, operation.txId))
-        .to.be.revertedWithCustomError(freezerContract, REVERT_ERROR_IF_TX_ID_IS_ZERO);
+        .to.be.revertedWithCustomError(freezerContract, REVERT_ERROR_TX_ID_IS_ZERO);
     });
 
     it("Is reverted if the provided amount is greater than 64-bit unsigned integer", async () => {
       const { freezerContract } = await setUpFixture(deployAndConfigureContracts);
       const [operation] = defineTestOperations();
-      operation.amount = BigInt(2) ** 64n;
+      operation.amount = maxUintForBits(64) + 1n;
       await expect(connect(freezerContract, freezer).freeze(operation.account, operation.amount, operation.txId))
-        .to.be.revertedWithCustomError(freezerContract, REVERT_ERROR_IF_AMOUNT_EXCESS)
+        .to.be.revertedWithCustomError(freezerContract, REVERT_ERROR_AMOUNT_EXCESS)
         .withArgs(operation.amount);
     });
 
@@ -375,7 +356,7 @@ describe("Contracts 'BalanceFreezer'", async () => {
       const [operation] = defineTestOperations();
       await proveTx(connect(freezerContract, freezer).freeze(operation.account, operation.amount, operation.txId));
       await expect(connect(freezerContract, freezer).freeze(operation.account, operation.amount, operation.txId))
-        .to.be.revertedWithCustomError(freezerContract, REVERT_ERROR_IF_OPERATION_ALREADY_EXECUTED)
+        .to.be.revertedWithCustomError(freezerContract, REVERT_ERROR_OPERATION_ALREADY_EXECUTED)
         .withArgs(operation.txId);
     });
   });
@@ -428,18 +409,26 @@ describe("Contracts 'BalanceFreezer'", async () => {
       await pauseContract(freezerContract);
       await expect(
         connect(freezerContract, freezer).freezeIncrease(operation.account, operation.amount, operation.txId)
-      ).to.be.revertedWithCustomError(freezerContract, REVERT_ERROR_IF_CONTRACT_IS_PAUSED);
+      ).to.be.revertedWithCustomError(freezerContract, REVERT_ERROR_CONTRACT_IS_PAUSED);
     });
 
     it("Is reverted if the caller does not have the freezer role", async () => {
       const { freezerContract } = await setUpFixture(deployAndConfigureContracts);
       const [operation] = defineTestOperations();
+
+      await expect(
+        connect(freezerContract, user).freezeIncrease(operation.account, operation.amount, operation.txId)
+      ).to.be.revertedWithCustomError(
+        freezerContract,
+        REVERT_ERROR_UNAUTHORIZED_ACCOUNT
+      ).withArgs(user.address, FREEZER_ROLE);
+
       await expect(
         connect(freezerContract, deployer).freezeIncrease(operation.account, operation.amount, operation.txId)
       ).to.be.revertedWithCustomError(
         freezerContract,
-        REVERT_ERROR_IF_UNAUTHORIZED_ACCOUNT
-      ).withArgs(deployer.address, freezerRole);
+        REVERT_ERROR_UNAUTHORIZED_ACCOUNT
+      ).withArgs(deployer.address, FREEZER_ROLE);
     });
 
     it("Is reverted if the provided off-chain transaction identifier is zero", async () => {
@@ -448,18 +437,18 @@ describe("Contracts 'BalanceFreezer'", async () => {
       operation.txId = TX_ID_ZERO;
       await expect(
         connect(freezerContract, freezer).freezeIncrease(operation.account, operation.amount, operation.txId)
-      ).to.be.revertedWithCustomError(freezerContract, REVERT_ERROR_IF_TX_ID_IS_ZERO);
+      ).to.be.revertedWithCustomError(freezerContract, REVERT_ERROR_TX_ID_IS_ZERO);
     });
 
     it("Is reverted if the provided amount is greater than 64-bit unsigned integer", async () => {
       const { freezerContract } = await setUpFixture(deployAndConfigureContracts);
       const [operation] = defineTestOperations();
-      operation.amount = BigInt(2) ** 64n;
+      operation.amount = maxUintForBits(64) + 1n;
       await expect(
         connect(freezerContract, freezer).freezeIncrease(operation.account, operation.amount, operation.txId)
       ).to.be.revertedWithCustomError(
         freezerContract,
-        REVERT_ERROR_IF_AMOUNT_EXCESS
+        REVERT_ERROR_AMOUNT_EXCESS
       ).withArgs(operation.amount);
     });
 
@@ -471,7 +460,7 @@ describe("Contracts 'BalanceFreezer'", async () => {
         connect(freezerContract, freezer).freezeIncrease(operation.account, operation.amount, operation.txId)
       ).to.be.revertedWithCustomError(
         freezerContract,
-        REVERT_ERROR_IF_OPERATION_ALREADY_EXECUTED
+        REVERT_ERROR_OPERATION_ALREADY_EXECUTED
       ).withArgs(operation.txId);
     });
   });
@@ -527,18 +516,26 @@ describe("Contracts 'BalanceFreezer'", async () => {
       await pauseContract(freezerContract);
       await expect(
         connect(freezerContract, freezer).freezeDecrease(operation.account, operation.amount, operation.txId)
-      ).to.be.revertedWithCustomError(freezerContract, REVERT_ERROR_IF_CONTRACT_IS_PAUSED);
+      ).to.be.revertedWithCustomError(freezerContract, REVERT_ERROR_CONTRACT_IS_PAUSED);
     });
 
     it("Is reverted if the caller does not have the freezer role", async () => {
       const { freezerContract } = await setUpFixture(deployAndConfigureContracts);
       const [operation] = defineTestOperations();
+
+      await expect(
+        connect(freezerContract, user).freezeDecrease(operation.account, operation.amount, operation.txId)
+      ).to.be.revertedWithCustomError(
+        freezerContract,
+        REVERT_ERROR_UNAUTHORIZED_ACCOUNT
+      ).withArgs(user.address, FREEZER_ROLE);
+
       await expect(
         connect(freezerContract, deployer).freezeDecrease(operation.account, operation.amount, operation.txId)
       ).to.be.revertedWithCustomError(
         freezerContract,
-        REVERT_ERROR_IF_UNAUTHORIZED_ACCOUNT
-      ).withArgs(deployer.address, freezerRole);
+        REVERT_ERROR_UNAUTHORIZED_ACCOUNT
+      ).withArgs(deployer.address, FREEZER_ROLE);
     });
 
     it("Is reverted if the provided off-chain transaction identifier is zero", async () => {
@@ -547,18 +544,18 @@ describe("Contracts 'BalanceFreezer'", async () => {
       operation.txId = TX_ID_ZERO;
       await expect(
         connect(freezerContract, freezer).freezeDecrease(operation.account, operation.amount, operation.txId)
-      ).to.be.revertedWithCustomError(freezerContract, REVERT_ERROR_IF_TX_ID_IS_ZERO);
+      ).to.be.revertedWithCustomError(freezerContract, REVERT_ERROR_TX_ID_IS_ZERO);
     });
 
     it("Is reverted if the provided amount is greater than 64-bit unsigned integer", async () => {
       const { freezerContract } = await setUpFixture(deployAndConfigureContracts);
       const [operation] = defineTestOperations();
-      operation.amount = BigInt(2) ** 64n;
+      operation.amount = maxUintForBits(64) + 1n;
       await expect(
         connect(freezerContract, freezer).freezeDecrease(operation.account, operation.amount, operation.txId)
       ).to.be.revertedWithCustomError(
         freezerContract,
-        REVERT_ERROR_IF_AMOUNT_EXCESS
+        REVERT_ERROR_AMOUNT_EXCESS
       ).withArgs(operation.amount);
     });
 
@@ -570,12 +567,12 @@ describe("Contracts 'BalanceFreezer'", async () => {
         connect(freezerContract, freezer).freezeDecrease(operation.account, operation.amount, operation.txId)
       ).to.be.revertedWithCustomError(
         freezerContract,
-        REVERT_ERROR_IF_OPERATION_ALREADY_EXECUTED
+        REVERT_ERROR_OPERATION_ALREADY_EXECUTED
       ).withArgs(operation.txId);
     });
   });
 
-  describe("Function 'transferFrozen()' accompanied by the 'registerOperation()' one", async () => {
+  describe("Function 'transferFrozen()'", async () => {
     async function executeAndCheckTransferring(
       fixture: Fixture,
       operation: TestOperation,
@@ -644,12 +641,23 @@ describe("Contracts 'BalanceFreezer'", async () => {
         receiver.address, // to
         operation.amount,
         operation.txId
-      )).to.be.revertedWithCustomError(freezerContract, REVERT_ERROR_IF_CONTRACT_IS_PAUSED);
+      )).to.be.revertedWithCustomError(freezerContract, REVERT_ERROR_CONTRACT_IS_PAUSED);
     });
 
     it("Is reverted if the caller does not have the freezer role", async () => {
       const { freezerContract } = await setUpFixture(deployAndConfigureContracts);
       const [operation] = defineTestOperations();
+
+      await expect(connect(freezerContract, user).transferFrozen(
+        operation.account, // from
+        receiver.address, // to
+        operation.amount,
+        operation.txId
+      )).to.be.revertedWithCustomError(
+        freezerContract,
+        REVERT_ERROR_UNAUTHORIZED_ACCOUNT
+      ).withArgs(user.address, FREEZER_ROLE);
+
       await expect(connect(freezerContract, deployer).transferFrozen(
         operation.account, // from
         receiver.address, // to
@@ -657,8 +665,8 @@ describe("Contracts 'BalanceFreezer'", async () => {
         operation.txId
       )).to.be.revertedWithCustomError(
         freezerContract,
-        REVERT_ERROR_IF_UNAUTHORIZED_ACCOUNT
-      ).withArgs(deployer.address, freezerRole);
+        REVERT_ERROR_UNAUTHORIZED_ACCOUNT
+      ).withArgs(deployer.address, FREEZER_ROLE);
     });
 
     it("Is reverted if the provided off-chain transaction identifier is zero", async () => {
@@ -670,13 +678,13 @@ describe("Contracts 'BalanceFreezer'", async () => {
         receiver.address, // to
         operation.amount,
         operation.txId
-      )).to.be.revertedWithCustomError(freezerContract, REVERT_ERROR_IF_TX_ID_IS_ZERO);
+      )).to.be.revertedWithCustomError(freezerContract, REVERT_ERROR_TX_ID_IS_ZERO);
     });
 
     it("Is reverted if the provided amount is greater than 64-bit unsigned integer", async () => {
       const { freezerContract } = await setUpFixture(deployAndConfigureContracts);
       const [operation] = defineTestOperations();
-      operation.amount = BigInt(2) ** 64n;
+      operation.amount = maxUintForBits(64) + 1n;
       await expect(connect(freezerContract, freezer).transferFrozen(
         operation.account, // from
         receiver.address, // to
@@ -684,7 +692,7 @@ describe("Contracts 'BalanceFreezer'", async () => {
         operation.txId
       )).to.be.revertedWithCustomError(
         freezerContract,
-        REVERT_ERROR_IF_AMOUNT_EXCESS
+        REVERT_ERROR_AMOUNT_EXCESS
       ).withArgs(operation.amount);
     });
 
@@ -699,7 +707,7 @@ describe("Contracts 'BalanceFreezer'", async () => {
         operation.txId
       )).to.be.revertedWithCustomError(
         freezerContract,
-        REVERT_ERROR_IF_OPERATION_ALREADY_EXECUTED
+        REVERT_ERROR_OPERATION_ALREADY_EXECUTED
       ).withArgs(operation.txId);
     });
   });
