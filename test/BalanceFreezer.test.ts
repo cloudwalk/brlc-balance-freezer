@@ -87,7 +87,7 @@ describe("Contracts 'BalanceFreezer'", async () => {
 
   const EXPECTED_VERSION: Version = {
     major: 1,
-    minor: 1,
+    minor: 2,
     patch: 0
   };
 
