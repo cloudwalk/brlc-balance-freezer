@@ -232,6 +232,16 @@ describe("Contracts 'BalanceFreezer'", async () => {
         anotherFreezerContract.initialize(ADDRESS_ZERO)
       ).to.be.revertedWithCustomError(anotherFreezerContract, REVERT_ERROR_TOKEN_ADDRESS_IS_ZERO);
     });
+
+    it("Is reverted for the contract implementation if it is called even for the first time", async () => {
+      const tokenAddress = user.address;
+      const freezerImplementation = await freezerContractFactory.deploy() as Contract;
+      await freezerImplementation.waitForDeployment();
+
+      await expect(
+        freezerImplementation.initialize(tokenAddress)
+      ).to.be.revertedWithCustomError(freezerImplementation, REVERT_ERROR_CONTRACT_INITIALIZATION_IS_INVALID);
+    });
   });
 
   describe("Function 'upgradeToAndCall()'", async () => {
