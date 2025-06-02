@@ -182,7 +182,7 @@ contract BalanceFreezer is
     // ------------------ Pure functions -------------------------- //
 
     /**
-     * @inheritdoc IBalanceFreezerPrimary
+     * @inheritdoc IBalanceFreezer
      */
     function proveBalanceFreezer() external pure {}
 

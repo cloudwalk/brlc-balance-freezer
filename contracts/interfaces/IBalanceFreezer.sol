@@ -134,13 +134,6 @@ interface IBalanceFreezerPrimary is IBalanceFreezerTypes {
      * @dev Returns the address of the underlying token contract.
      */
     function underlyingToken() external view returns (address);
-
-    // ------------------ Pure functions -------------------------- //
-
-    /**
-     * @dev Proves the contract is the balance freezer one. A marker function.
-     */
-    function proveBalanceFreezer() external pure;
 }
 
 /**
@@ -176,4 +169,9 @@ interface IBalanceFreezerErrors {
  * @author CloudWalk Inc. (See https://cloudwalk.io)
  * @dev The full interface of the balance freezer contract.
  */
-interface IBalanceFreezer is IBalanceFreezerPrimary, IBalanceFreezerErrors {}
+interface IBalanceFreezer is IBalanceFreezerPrimary, IBalanceFreezerErrors {
+    /**
+     * @dev Proves the contract is the balance freezer one. A marker function.
+     */
+    function proveBalanceFreezer() external pure;
+}
