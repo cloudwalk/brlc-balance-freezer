@@ -65,6 +65,14 @@ describe("Contracts 'BalanceFreezer'", async () => {
     TOKEN_AMOUNT * 5
   ];
 
+  // Events of the contracts under test
+  const EVENT_NAME_FROZEN_BALANCE_TRANSFER = "FrozenBalanceTransfer";
+  const EVENT_NAME_FROZEN_BALANCE_UPDATED = "FrozenBalanceUpdated";
+  const EVENT_NAME_MOCK_CALL_FREEZE = "MockCallFreeze";
+  const EVENT_NAME_MOCK_CALL_FREEZE_INCREASE = "MockCallFreezeIncrease";
+  const EVENT_NAME_MOCK_CALL_FREEZE_DECREASE = "MockCallFreezeDecrease";
+  const EVENT_NAME_MOCK_CALL_TRANSFER_FROZEN = "MockCallTransferFrozen";
+
   // Errors of the lib contracts
   const ERROR_NAME_CONTRACT_INITIALIZATION_IS_INVALID = "InvalidInitialization";
   const ERROR_NAME_CONTRACT_IS_PAUSED = "EnforcedPause";
@@ -76,14 +84,6 @@ describe("Contracts 'BalanceFreezer'", async () => {
   const ERROR_NAME_OPERATION_ALREADY_EXECUTED = "BalanceFreezer_AlreadyExecuted";
   const ERROR_NAME_TOKEN_ADDRESS_IS_ZERO = "BalanceFreezer_TokenAddressZero";
   const ERROR_NAME_TX_ID_IS_ZERO = "BalanceFreezer_TxIdZero";
-
-  // Events of the contracts under test
-  const EVENT_NAME_FROZEN_BALANCE_TRANSFER = "FrozenBalanceTransfer";
-  const EVENT_NAME_FROZEN_BALANCE_UPDATED = "FrozenBalanceUpdated";
-  const EVENT_NAME_MOCK_CALL_FREEZE = "MockCallFreeze";
-  const EVENT_NAME_MOCK_CALL_FREEZE_INCREASE = "MockCallFreezeIncrease";
-  const EVENT_NAME_MOCK_CALL_FREEZE_DECREASE = "MockCallFreezeDecrease";
-  const EVENT_NAME_MOCK_CALL_TRANSFER_FROZEN = "MockCallTransferFrozen";
 
   const EXPECTED_VERSION: Version = {
     major: 1,
