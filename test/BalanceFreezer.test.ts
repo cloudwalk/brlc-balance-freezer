@@ -74,16 +74,16 @@ describe("Contracts 'BalanceFreezer'", async () => {
   const EVENT_NAME_MOCK_CALL_TRANSFER_FROZEN = "MockCallTransferFrozen";
 
   // Errors of the lib contracts
-  const ERROR_NAME_CONTRACT_INITIALIZATION_IS_INVALID = "InvalidInitialization";
-  const ERROR_NAME_CONTRACT_IS_PAUSED = "EnforcedPause";
-  const ERROR_NAME_UNAUTHORIZED_ACCOUNT = "AccessControlUnauthorizedAccount";
+  const ERROR_NAME_ACCESS_CONTROL_UNAUTHORIZED_ACCOUNT = "AccessControlUnauthorizedAccount";
+  const ERROR_NAME_ENFORCED_PAUSE = "EnforcedPause";
+  const ERROR_NAME_INVALID_INITIALIZATION = "InvalidInitialization";
 
   // Errors of the contracts under test
+  const ERROR_NAME_ALREADY_EXECUTED = "BalanceFreezer_AlreadyExecuted";
   const ERROR_NAME_AMOUNT_EXCESS = "BalanceFreezer_AmountExcess";
   const ERROR_NAME_IMPLEMENTATION_ADDRESS_INVALID = "BalanceFreezer_ImplementationAddressInvalid";
-  const ERROR_NAME_OPERATION_ALREADY_EXECUTED = "BalanceFreezer_AlreadyExecuted";
-  const ERROR_NAME_TOKEN_ADDRESS_IS_ZERO = "BalanceFreezer_TokenAddressZero";
-  const ERROR_NAME_TX_ID_IS_ZERO = "BalanceFreezer_TxIdZero";
+  const ERROR_NAME_TOKEN_ADDRESS_ZERO = "BalanceFreezer_TokenAddressZero";
+  const ERROR_NAME_TX_ID_ZERO = "BalanceFreezer_TxIdZero";
 
   const EXPECTED_VERSION: Version = {
     major: 1,
@@ -220,7 +220,7 @@ describe("Contracts 'BalanceFreezer'", async () => {
     it("Is reverted if it is called a second time", async () => {
       const { freezerContract, tokenMock } = await setUpFixture(deployContracts);
       await expect(freezerContract.initialize(getAddress(tokenMock)))
-        .to.be.revertedWithCustomError(freezerContract, ERROR_NAME_CONTRACT_INITIALIZATION_IS_INVALID);
+        .to.be.revertedWithCustomError(freezerContract, ERROR_NAME_INVALID_INITIALIZATION);
     });
 
     it("Is reverted if the passed token address is zero", async () => {
@@ -228,7 +228,7 @@ describe("Contracts 'BalanceFreezer'", async () => {
         await upgrades.deployProxy(freezerContractFactory, [], { initializer: false }) as Contract;
 
       await expect(anotherFreezerContract.initialize(ADDRESS_ZERO))
-        .to.be.revertedWithCustomError(anotherFreezerContract, ERROR_NAME_TOKEN_ADDRESS_IS_ZERO);
+        .to.be.revertedWithCustomError(anotherFreezerContract, ERROR_NAME_TOKEN_ADDRESS_ZERO);
     });
 
     it("Is reverted for the contract implementation if it is called even for the first time", async () => {
@@ -237,7 +237,7 @@ describe("Contracts 'BalanceFreezer'", async () => {
       await freezerImplementation.waitForDeployment();
 
       await expect(freezerImplementation.initialize(tokenAddress))
-        .to.be.revertedWithCustomError(freezerImplementation, ERROR_NAME_CONTRACT_INITIALIZATION_IS_INVALID);
+        .to.be.revertedWithCustomError(freezerImplementation, ERROR_NAME_INVALID_INITIALIZATION);
     });
   });
 
@@ -251,7 +251,7 @@ describe("Contracts 'BalanceFreezer'", async () => {
       const { freezerContract } = await setUpFixture(deployContracts);
 
       await expect(connect(freezerContract, user).upgradeToAndCall(getAddress(freezerContract), "0x"))
-        .to.be.revertedWithCustomError(freezerContract, ERROR_NAME_UNAUTHORIZED_ACCOUNT)
+        .to.be.revertedWithCustomError(freezerContract, ERROR_NAME_ACCESS_CONTROL_UNAUTHORIZED_ACCOUNT)
         .withArgs(user.address, OWNER_ROLE);
     });
   });
@@ -266,7 +266,7 @@ describe("Contracts 'BalanceFreezer'", async () => {
       const { freezerContract } = await setUpFixture(deployContracts);
 
       await expect(connect(freezerContract, user).upgradeTo(getAddress(freezerContract)))
-        .to.be.revertedWithCustomError(freezerContract, ERROR_NAME_UNAUTHORIZED_ACCOUNT)
+        .to.be.revertedWithCustomError(freezerContract, ERROR_NAME_ACCESS_CONTROL_UNAUTHORIZED_ACCOUNT)
         .withArgs(user.address, OWNER_ROLE);
     });
 
@@ -325,7 +325,7 @@ describe("Contracts 'BalanceFreezer'", async () => {
       const [operation] = defineTestOperations();
       await pauseContract(freezerContract);
       await expect(connect(freezerContract, freezer).freeze(operation.account, operation.amount, operation.txId))
-        .to.be.revertedWithCustomError(freezerContract, ERROR_NAME_CONTRACT_IS_PAUSED);
+        .to.be.revertedWithCustomError(freezerContract, ERROR_NAME_ENFORCED_PAUSE);
     });
 
     it("Is reverted if the caller does not have the freezer role", async () => {
@@ -333,11 +333,11 @@ describe("Contracts 'BalanceFreezer'", async () => {
       const [operation] = defineTestOperations();
 
       await expect(connect(freezerContract, user).freeze(operation.account, operation.amount, operation.txId))
-        .to.be.revertedWithCustomError(freezerContract, ERROR_NAME_UNAUTHORIZED_ACCOUNT)
+        .to.be.revertedWithCustomError(freezerContract, ERROR_NAME_ACCESS_CONTROL_UNAUTHORIZED_ACCOUNT)
         .withArgs(user.address, FREEZER_ROLE);
 
       await expect(connect(freezerContract, deployer).freeze(operation.account, operation.amount, operation.txId))
-        .to.be.revertedWithCustomError(freezerContract, ERROR_NAME_UNAUTHORIZED_ACCOUNT)
+        .to.be.revertedWithCustomError(freezerContract, ERROR_NAME_ACCESS_CONTROL_UNAUTHORIZED_ACCOUNT)
         .withArgs(deployer.address, FREEZER_ROLE);
     });
 
@@ -346,7 +346,7 @@ describe("Contracts 'BalanceFreezer'", async () => {
       const [operation] = defineTestOperations();
       operation.txId = TX_ID_ZERO;
       await expect(connect(freezerContract, freezer).freeze(operation.account, operation.amount, operation.txId))
-        .to.be.revertedWithCustomError(freezerContract, ERROR_NAME_TX_ID_IS_ZERO);
+        .to.be.revertedWithCustomError(freezerContract, ERROR_NAME_TX_ID_ZERO);
     });
 
     it("Is reverted if the provided amount is greater than 64-bit unsigned integer", async () => {
@@ -363,7 +363,7 @@ describe("Contracts 'BalanceFreezer'", async () => {
       const [operation] = defineTestOperations();
       await proveTx(connect(freezerContract, freezer).freeze(operation.account, operation.amount, operation.txId));
       await expect(connect(freezerContract, freezer).freeze(operation.account, operation.amount, operation.txId))
-        .to.be.revertedWithCustomError(freezerContract, ERROR_NAME_OPERATION_ALREADY_EXECUTED)
+        .to.be.revertedWithCustomError(freezerContract, ERROR_NAME_ALREADY_EXECUTED)
         .withArgs(operation.txId);
     });
   });
@@ -416,7 +416,7 @@ describe("Contracts 'BalanceFreezer'", async () => {
       await pauseContract(freezerContract);
       await expect(
         connect(freezerContract, freezer).freezeIncrease(operation.account, operation.amount, operation.txId)
-      ).to.be.revertedWithCustomError(freezerContract, ERROR_NAME_CONTRACT_IS_PAUSED);
+      ).to.be.revertedWithCustomError(freezerContract, ERROR_NAME_ENFORCED_PAUSE);
     });
 
     it("Is reverted if the caller does not have the freezer role", async () => {
@@ -427,14 +427,14 @@ describe("Contracts 'BalanceFreezer'", async () => {
         connect(freezerContract, user).freezeIncrease(operation.account, operation.amount, operation.txId)
       ).to.be.revertedWithCustomError(
         freezerContract,
-        ERROR_NAME_UNAUTHORIZED_ACCOUNT
+        ERROR_NAME_ACCESS_CONTROL_UNAUTHORIZED_ACCOUNT
       ).withArgs(user.address, FREEZER_ROLE);
 
       await expect(
         connect(freezerContract, deployer).freezeIncrease(operation.account, operation.amount, operation.txId)
       ).to.be.revertedWithCustomError(
         freezerContract,
-        ERROR_NAME_UNAUTHORIZED_ACCOUNT
+        ERROR_NAME_ACCESS_CONTROL_UNAUTHORIZED_ACCOUNT
       ).withArgs(deployer.address, FREEZER_ROLE);
     });
 
@@ -444,7 +444,7 @@ describe("Contracts 'BalanceFreezer'", async () => {
       operation.txId = TX_ID_ZERO;
       await expect(
         connect(freezerContract, freezer).freezeIncrease(operation.account, operation.amount, operation.txId)
-      ).to.be.revertedWithCustomError(freezerContract, ERROR_NAME_TX_ID_IS_ZERO);
+      ).to.be.revertedWithCustomError(freezerContract, ERROR_NAME_TX_ID_ZERO);
     });
 
     it("Is reverted if the provided amount is greater than 64-bit unsigned integer", async () => {
@@ -467,7 +467,7 @@ describe("Contracts 'BalanceFreezer'", async () => {
         connect(freezerContract, freezer).freezeIncrease(operation.account, operation.amount, operation.txId)
       ).to.be.revertedWithCustomError(
         freezerContract,
-        ERROR_NAME_OPERATION_ALREADY_EXECUTED
+        ERROR_NAME_ALREADY_EXECUTED
       ).withArgs(operation.txId);
     });
   });
@@ -523,7 +523,7 @@ describe("Contracts 'BalanceFreezer'", async () => {
       await pauseContract(freezerContract);
       await expect(
         connect(freezerContract, freezer).freezeDecrease(operation.account, operation.amount, operation.txId)
-      ).to.be.revertedWithCustomError(freezerContract, ERROR_NAME_CONTRACT_IS_PAUSED);
+      ).to.be.revertedWithCustomError(freezerContract, ERROR_NAME_ENFORCED_PAUSE);
     });
 
     it("Is reverted if the caller does not have the freezer role", async () => {
@@ -534,14 +534,14 @@ describe("Contracts 'BalanceFreezer'", async () => {
         connect(freezerContract, user).freezeDecrease(operation.account, operation.amount, operation.txId)
       ).to.be.revertedWithCustomError(
         freezerContract,
-        ERROR_NAME_UNAUTHORIZED_ACCOUNT
+        ERROR_NAME_ACCESS_CONTROL_UNAUTHORIZED_ACCOUNT
       ).withArgs(user.address, FREEZER_ROLE);
 
       await expect(
         connect(freezerContract, deployer).freezeDecrease(operation.account, operation.amount, operation.txId)
       ).to.be.revertedWithCustomError(
         freezerContract,
-        ERROR_NAME_UNAUTHORIZED_ACCOUNT
+        ERROR_NAME_ACCESS_CONTROL_UNAUTHORIZED_ACCOUNT
       ).withArgs(deployer.address, FREEZER_ROLE);
     });
 
@@ -551,7 +551,7 @@ describe("Contracts 'BalanceFreezer'", async () => {
       operation.txId = TX_ID_ZERO;
       await expect(
         connect(freezerContract, freezer).freezeDecrease(operation.account, operation.amount, operation.txId)
-      ).to.be.revertedWithCustomError(freezerContract, ERROR_NAME_TX_ID_IS_ZERO);
+      ).to.be.revertedWithCustomError(freezerContract, ERROR_NAME_TX_ID_ZERO);
     });
 
     it("Is reverted if the provided amount is greater than 64-bit unsigned integer", async () => {
@@ -574,7 +574,7 @@ describe("Contracts 'BalanceFreezer'", async () => {
         connect(freezerContract, freezer).freezeDecrease(operation.account, operation.amount, operation.txId)
       ).to.be.revertedWithCustomError(
         freezerContract,
-        ERROR_NAME_OPERATION_ALREADY_EXECUTED
+        ERROR_NAME_ALREADY_EXECUTED
       ).withArgs(operation.txId);
     });
   });
@@ -648,7 +648,7 @@ describe("Contracts 'BalanceFreezer'", async () => {
         receiver.address, // to
         operation.amount,
         operation.txId
-      )).to.be.revertedWithCustomError(freezerContract, ERROR_NAME_CONTRACT_IS_PAUSED);
+      )).to.be.revertedWithCustomError(freezerContract, ERROR_NAME_ENFORCED_PAUSE);
     });
 
     it("Is reverted if the caller does not have the freezer role", async () => {
@@ -662,7 +662,7 @@ describe("Contracts 'BalanceFreezer'", async () => {
         operation.txId
       )).to.be.revertedWithCustomError(
         freezerContract,
-        ERROR_NAME_UNAUTHORIZED_ACCOUNT
+        ERROR_NAME_ACCESS_CONTROL_UNAUTHORIZED_ACCOUNT
       ).withArgs(user.address, FREEZER_ROLE);
 
       await expect(connect(freezerContract, deployer).transferFrozen(
@@ -672,7 +672,7 @@ describe("Contracts 'BalanceFreezer'", async () => {
         operation.txId
       )).to.be.revertedWithCustomError(
         freezerContract,
-        ERROR_NAME_UNAUTHORIZED_ACCOUNT
+        ERROR_NAME_ACCESS_CONTROL_UNAUTHORIZED_ACCOUNT
       ).withArgs(deployer.address, FREEZER_ROLE);
     });
 
@@ -685,7 +685,7 @@ describe("Contracts 'BalanceFreezer'", async () => {
         receiver.address, // to
         operation.amount,
         operation.txId
-      )).to.be.revertedWithCustomError(freezerContract, ERROR_NAME_TX_ID_IS_ZERO);
+      )).to.be.revertedWithCustomError(freezerContract, ERROR_NAME_TX_ID_ZERO);
     });
 
     it("Is reverted if the provided amount is greater than 64-bit unsigned integer", async () => {
@@ -714,7 +714,7 @@ describe("Contracts 'BalanceFreezer'", async () => {
         operation.txId
       )).to.be.revertedWithCustomError(
         freezerContract,
-        ERROR_NAME_OPERATION_ALREADY_EXECUTED
+        ERROR_NAME_ALREADY_EXECUTED
       ).withArgs(operation.txId);
     });
   });
