@@ -70,18 +70,14 @@ describe("Contract 'PausableExtUpgradeable'", async () => {
 
     it("The external initializer is reverted if it is called a second time", async () => {
       const { pausableExtMock } = await setUpFixture(deployPausableExtMock);
-      await expect(pausableExtMock.initialize()).to.be.revertedWithCustomError(
-        pausableExtMock,
-        ERROR_NAME_CONTRACT_INITIALIZATION_IS_INVALID
-      );
+      await expect(pausableExtMock.initialize())
+        .to.be.revertedWithCustomError(pausableExtMock, ERROR_NAME_CONTRACT_INITIALIZATION_IS_INVALID);
     });
 
     it("The internal unchained initializer is reverted if it is called outside the init process", async () => {
       const { pausableExtMock } = await setUpFixture(deployPausableExtMock);
-      await expect(pausableExtMock.callParentInitializerUnchained()).to.be.revertedWithCustomError(
-        pausableExtMock,
-        ERROR_NAME_CONTRACT_IS_NOT_INITIALIZING
-      );
+      await expect(pausableExtMock.callParentInitializerUnchained())
+        .to.be.revertedWithCustomError(pausableExtMock, ERROR_NAME_CONTRACT_IS_NOT_INITIALIZING);
     });
   });
 
@@ -98,6 +94,7 @@ describe("Contract 'PausableExtUpgradeable'", async () => {
 
     it("Is reverted if it is called by an account without the pauser role", async () => {
       const { pausableExtMock } = await setUpFixture(deployAndConfigurePausableExtMock);
+
       await expect(pausableExtMock.pause())
         .to.be.revertedWithCustomError(pausableExtMock, ERROR_NAME_UNAUTHORIZED_ACCOUNT)
         .withArgs(deployer.address, PAUSER_ROLE);
@@ -118,6 +115,7 @@ describe("Contract 'PausableExtUpgradeable'", async () => {
 
     it("Is reverted if the caller does not have the pauser role", async () => {
       const { pausableExtMock } = await setUpFixture(deployAndConfigurePausableExtMock);
+
       await expect(pausableExtMock.unpause())
         .to.be.revertedWithCustomError(pausableExtMock, ERROR_NAME_UNAUTHORIZED_ACCOUNT)
         .withArgs(deployer.address, PAUSER_ROLE);

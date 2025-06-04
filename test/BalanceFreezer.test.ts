@@ -219,18 +219,16 @@ describe("Contracts 'BalanceFreezer'", async () => {
 
     it("Is reverted if it is called a second time", async () => {
       const { freezerContract, tokenMock } = await setUpFixture(deployContracts);
-      await expect(
-        freezerContract.initialize(getAddress(tokenMock))
-      ).to.be.revertedWithCustomError(freezerContract, ERROR_NAME_CONTRACT_INITIALIZATION_IS_INVALID);
+      await expect(freezerContract.initialize(getAddress(tokenMock)))
+        .to.be.revertedWithCustomError(freezerContract, ERROR_NAME_CONTRACT_INITIALIZATION_IS_INVALID);
     });
 
     it("Is reverted if the passed token address is zero", async () => {
       const anotherFreezerContract =
         await upgrades.deployProxy(freezerContractFactory, [], { initializer: false }) as Contract;
 
-      await expect(
-        anotherFreezerContract.initialize(ADDRESS_ZERO)
-      ).to.be.revertedWithCustomError(anotherFreezerContract, ERROR_NAME_TOKEN_ADDRESS_IS_ZERO);
+      await expect(anotherFreezerContract.initialize(ADDRESS_ZERO))
+        .to.be.revertedWithCustomError(anotherFreezerContract, ERROR_NAME_TOKEN_ADDRESS_IS_ZERO);
     });
 
     it("Is reverted for the contract implementation if it is called even for the first time", async () => {
@@ -238,9 +236,8 @@ describe("Contracts 'BalanceFreezer'", async () => {
       const freezerImplementation = await freezerContractFactory.deploy() as Contract;
       await freezerImplementation.waitForDeployment();
 
-      await expect(
-        freezerImplementation.initialize(tokenAddress)
-      ).to.be.revertedWithCustomError(freezerImplementation, ERROR_NAME_CONTRACT_INITIALIZATION_IS_INVALID);
+      await expect(freezerImplementation.initialize(tokenAddress))
+        .to.be.revertedWithCustomError(freezerImplementation, ERROR_NAME_CONTRACT_INITIALIZATION_IS_INVALID);
     });
   });
 
