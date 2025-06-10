@@ -73,7 +73,7 @@ describe("Contracts 'BalanceFreezer'", async () => {
   const EVENT_NAME_MOCK_CALL_FREEZE_DECREASE = "MockCallFreezeDecrease";
   const EVENT_NAME_MOCK_CALL_TRANSFER_FROZEN = "MockCallTransferFrozen";
 
-  // Errors of the lib contracts
+  // Errors of the library contracts
   const ERROR_NAME_ACCESS_CONTROL_UNAUTHORIZED_ACCOUNT = "AccessControlUnauthorizedAccount";
   const ERROR_NAME_ENFORCED_PAUSE = "EnforcedPause";
   const ERROR_NAME_INVALID_INITIALIZATION = "InvalidInitialization";
