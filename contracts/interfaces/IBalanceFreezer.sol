@@ -6,7 +6,7 @@ import { IBalanceFreezerTypes } from "./IBalanceFreezerTypes.sol";
 
 /**
  * @title IBalanceFreezerPrimary interface
- * @author CloudWalk Inc. (See https://cloudwalk.io)
+ * @author CloudWalk Inc. (See https://www.cloudwalk.io)
  * @dev The primary interface of the balance freezer contract.
  */
 interface IBalanceFreezerPrimary is IBalanceFreezerTypes {
@@ -138,7 +138,7 @@ interface IBalanceFreezerPrimary is IBalanceFreezerTypes {
 
 /**
  * @title IBalanceFreezerErrors interface
- * @author CloudWalk Inc. (See https://cloudwalk.io)
+ * @author CloudWalk Inc. (See https://www.cloudwalk.io)
  * @dev Defines the custom errors used in the balance freezer contract.
  */
 interface IBalanceFreezerErrors {
@@ -166,7 +166,7 @@ interface IBalanceFreezerErrors {
 
 /**
  * @title IBalanceFreezer interface
- * @author CloudWalk Inc. (See https://cloudwalk.io)
+ * @author CloudWalk Inc. (See https://www.cloudwalk.io)
  * @dev The full interface of the balance freezer contract.
  */
 interface IBalanceFreezer is IBalanceFreezerPrimary, IBalanceFreezerErrors {

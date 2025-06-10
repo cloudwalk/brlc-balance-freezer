@@ -63,6 +63,7 @@ contract ERC20FreezableTokenMock is ERC20, IERC20Freezable {
         _mint(account, amount);
         return true;
     }
+
     /**
      * @dev Simulates the "freeze()" function by emitting the appropriate mock event and returning known values.
      *
@@ -145,7 +146,7 @@ contract ERC20FreezableTokenMock is ERC20, IERC20Freezable {
 
     // ------------------ Internal functions ---------------------- //
 
-    /// @dev Calculates and returns mock frozen balances internally;
+    /// @dev Calculates and returns mock frozen balances internally.
     function _decreaseFrozen(uint256 amount) internal pure returns (uint256 newBalance, uint256 oldBalance) {
         oldBalance = OLD_FROZEN_BALANCE_MOCK;
         if (amount > oldBalance) {

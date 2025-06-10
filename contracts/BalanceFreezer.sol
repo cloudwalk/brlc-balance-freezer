@@ -30,7 +30,7 @@ contract BalanceFreezer is
 {
     // ------------------ Constants ------------------------------- //
 
-    /// @dev The role of freezer that is allowed to update and transfer the frozen balance of accounts.
+    /// @dev The role of a freezer that is allowed to update and transfer the frozen balance of accounts.
     bytes32 public constant FREEZER_ROLE = keccak256("FREEZER_ROLE");
 
     // ------------------ Constructor ----------------------------- //
