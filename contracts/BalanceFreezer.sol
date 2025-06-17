@@ -30,69 +30,49 @@ contract BalanceFreezer is
 {
     // ------------------ Constants ------------------------------- //
 
-    /// @dev The role of this contract owner.
-    bytes32 public constant OWNER_ROLE = keccak256("OWNER_ROLE");
-
-    /// @dev The role of freezer that is allowed to update and transfer the frozen balance of accounts.
+    /// @dev The role of a freezer that is allowed to update and transfer the frozen balance of accounts.
     bytes32 public constant FREEZER_ROLE = keccak256("FREEZER_ROLE");
+
+    // ------------------ Constructor ----------------------------- //
+
+    /**
+     * @dev Constructor that prohibits the initialization of the implementation of the upgradeable contract.
+     *
+     * See details
+     * https://docs.openzeppelin.com/upgrades-plugins/writing-upgradeable#initializing_the_implementation_contract
+     *
+     * @custom:oz-upgrades-unsafe-allow constructor
+     */
+    constructor() {
+        _disableInitializers();
+    }
 
     // ------------------ Initializers ---------------------------- //
 
     /**
-     * @dev Initializer of the upgradable contract.
+     * @dev Initializer of the upgradeable contract.
      *
-     * See details https://docs.openzeppelin.com/upgrades-plugins/1.x/writing-upgradeable.
+     * See details: https://docs.openzeppelin.com/upgrades-plugins/writing-upgradeable
      *
      * @param token_ The address of the token to set as the underlying one.
      */
     function initialize(address token_) external initializer {
-        __BalanceFreezer_init(token_);
-    }
-
-    /**
-     * @dev Internal initializer of the upgradable contract.
-     *
-     * See details https://docs.openzeppelin.com/upgrades-plugins/1.x/writing-upgradeable.
-     *
-     * @param token_ The address of the token to set as the underlying one.
-     */
-    function __BalanceFreezer_init(address token_) internal onlyInitializing {
-        __Context_init_unchained();
-        __ERC165_init_unchained();
-        __AccessControl_init_unchained();
         __AccessControlExt_init_unchained();
-        __Pausable_init_unchained();
-        __PausableExt_init_unchained(OWNER_ROLE);
-        __Rescuable_init_unchained(OWNER_ROLE);
-        __UUPSUpgradeable_init_unchained();
+        __PausableExt_init_unchained();
+        __Rescuable_init_unchained();
+        __UUPSExt_init_unchained(); // This is needed only to avoid errors during coverage assessment
 
-        __BalanceFreezer_init_unchained(token_);
-    }
-
-    /**
-     * @dev Unchained internal initializer of the upgradable contract.
-     *
-     * See details https://docs.openzeppelin.com/upgrades-plugins/1.x/writing-upgradeable.
-     *
-     * Requirements:
-     *
-     * - The passed address of the underlying token must not be zero.
-     *
-     * @param token_ The address of the token to set as the underlying one.
-     */
-    function __BalanceFreezer_init_unchained(address token_) internal onlyInitializing {
         if (token_ == address(0)) {
             revert BalanceFreezer_TokenAddressZero();
         }
 
         _token = token_;
 
-        _setRoleAdmin(OWNER_ROLE, OWNER_ROLE);
-        _setRoleAdmin(FREEZER_ROLE, OWNER_ROLE);
+        _setRoleAdmin(FREEZER_ROLE, GRANTOR_ROLE);
         _grantRole(OWNER_ROLE, _msgSender());
     }
 
-    // ------------------ Functions ------------------------------- //
+    // ------------------ Transactional functions ----------------- //
 
     /**
      * @inheritdoc IBalanceFreezerPrimary
@@ -202,7 +182,7 @@ contract BalanceFreezer is
     // ------------------ Pure functions -------------------------- //
 
     /**
-     * @inheritdoc IBalanceFreezerPrimary
+     * @inheritdoc IBalanceFreezer
      */
     function proveBalanceFreezer() external pure {}
 

@@ -28,7 +28,7 @@ interface IBalanceFreezerTypes {
     }
 
     /**
-     * @dev Structure with data of a single freezing operation.
+     * @dev The data of a single freezing operation.
      *
      * The fields:
      *

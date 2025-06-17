@@ -4,10 +4,12 @@ pragma solidity ^0.8.0;
 
 /**
  * @title IERC20Freezable interface
- * @author CloudWalk Inc. (See https://cloudwalk.io)
+ * @author CloudWalk Inc. (See https://www.cloudwalk.io)
  * @dev The interface of a token that supports freezing operations.
  */
 interface IERC20Freezable {
+    // ------------------ Transactional functions ----------------- //
+
     /**
      * @dev Updates the frozen balance of an account.
      *
@@ -61,6 +63,8 @@ interface IERC20Freezable {
         address to,
         uint256 amount
     ) external returns (uint256 newBalance, uint256 oldBalance);
+
+    // ------------------ View functions -------------------------- //
 
     /**
      * @dev Retrieves the frozen balance of an account.

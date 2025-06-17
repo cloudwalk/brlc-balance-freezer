@@ -5,36 +5,8 @@ pragma solidity ^0.8.20;
 import { IBalanceFreezerTypes } from "./IBalanceFreezerTypes.sol";
 
 /**
- * @title IBalanceFreezerErrors interface
- * @author CloudWalk Inc. (See https://cloudwalk.io)
- * @dev Defines the custom errors used in the balance freezer contract.
- */
-interface IBalanceFreezerErrors {
-    /**
-     * @dev Thrown if the operation with the provided `txId` is already executed.
-     * @param txId The provided off-chain transaction identifier of the related operation.
-     */
-    error BalanceFreezer_AlreadyExecuted(bytes32 txId);
-
-    /**
-     * @dev Thrown if the provided amount exceeds the maximum allowed value.
-     * @param amount The provided amount.
-     */
-    error BalanceFreezer_AmountExcess(uint256 amount);
-
-    /// @dev Thrown if the provided new implementation address is not of a balance freezer contract.
-    error BalanceFreezer_ImplementationAddressInvalid();
-
-    /// @dev Thrown if the provided token address is zero.
-    error BalanceFreezer_TokenAddressZero();
-
-    /// @dev Thrown if the provided off-chain transaction identifier is zero.
-    error BalanceFreezer_TxIdZero();
-}
-
-/**
  * @title IBalanceFreezerPrimary interface
- * @author CloudWalk Inc. (See https://cloudwalk.io)
+ * @author CloudWalk Inc. (See https://www.cloudwalk.io)
  * @dev The primary interface of the balance freezer contract.
  */
 interface IBalanceFreezerPrimary is IBalanceFreezerTypes {
@@ -75,7 +47,7 @@ interface IBalanceFreezerPrimary is IBalanceFreezerTypes {
         address indexed to
     );
 
-    // ------------------ Functions ------------------------------- //
+    // ------------------ Transactional functions ----------------- //
 
     /**
      * @dev Updates the frozen balance of an account.
@@ -141,6 +113,8 @@ interface IBalanceFreezerPrimary is IBalanceFreezerTypes {
         bytes32 txId
     ) external;
 
+    // ------------------ View functions -------------------------- //
+
     /**
      * @dev Returns the data of a single freezing operation.
      * @param txId The off-chain transaction identifier of the operation.
@@ -160,16 +134,44 @@ interface IBalanceFreezerPrimary is IBalanceFreezerTypes {
      * @dev Returns the address of the underlying token contract.
      */
     function underlyingToken() external view returns (address);
+}
 
+/**
+ * @title IBalanceFreezerErrors interface
+ * @author CloudWalk Inc. (See https://www.cloudwalk.io)
+ * @dev Defines the custom errors used in the balance freezer contract.
+ */
+interface IBalanceFreezerErrors {
+    /**
+     * @dev Thrown if the operation with the provided `txId` is already executed.
+     * @param txId The provided off-chain transaction identifier of the related operation.
+     */
+    error BalanceFreezer_AlreadyExecuted(bytes32 txId);
+
+    /**
+     * @dev Thrown if the provided amount exceeds the maximum allowed value.
+     * @param amount The provided amount.
+     */
+    error BalanceFreezer_AmountExcess(uint256 amount);
+
+    /// @dev Thrown if the provided new implementation address is not of a balance freezer contract.
+    error BalanceFreezer_ImplementationAddressInvalid();
+
+    /// @dev Thrown if the provided token address is zero.
+    error BalanceFreezer_TokenAddressZero();
+
+    /// @dev Thrown if the provided off-chain transaction identifier is zero.
+    error BalanceFreezer_TxIdZero();
+}
+
+/**
+ * @title IBalanceFreezer interface
+ * @author CloudWalk Inc. (See https://www.cloudwalk.io)
+ * @dev The full interface of the balance freezer contract.
+ */
+interface IBalanceFreezer is IBalanceFreezerPrimary, IBalanceFreezerErrors {
     /**
      * @dev Proves the contract is the balance freezer one. A marker function.
      */
     function proveBalanceFreezer() external pure;
 }
-
-/**
- * @title IBalanceFreezer interface
- * @author CloudWalk Inc. (See https://cloudwalk.io)
- * @dev The full interface of the balance freezer contract.
- */
-interface IBalanceFreezer is IBalanceFreezerErrors, IBalanceFreezerPrimary {}
