@@ -12,7 +12,7 @@ import { IBalanceFreezer } from "./interfaces/IBalanceFreezer.sol";
 import { IBalanceFreezerPrimary } from "./interfaces/IBalanceFreezer.sol";
 import { IERC20Freezable } from "./interfaces/IERC20Freezable.sol";
 
-import { BalanceFreezerStorage } from "./BalanceFreezerStorage.sol";
+import { BalanceFreezerStorageLayout } from "./BalanceFreezerStorage.sol";
 
 /**
  * @title BalanceFreezer contract
@@ -20,7 +20,7 @@ import { BalanceFreezerStorage } from "./BalanceFreezerStorage.sol";
  * @dev The contract that responsible for freezing operations on the underlying token contract.
  */
 contract BalanceFreezer is
-    BalanceFreezerStorage,
+    BalanceFreezerStorageLayout,
     AccessControlExtUpgradeable,
     PausableExtUpgradeable,
     RescuableUpgradeable,
@@ -66,7 +66,7 @@ contract BalanceFreezer is
             revert BalanceFreezer_TokenAddressZero();
         }
 
-        _token = token_;
+        _getBalanceFreezerStorage().token = token_;
 
         _setRoleAdmin(FREEZER_ROLE, GRANTOR_ROLE);
         _grantRole(OWNER_ROLE, _msgSender());
@@ -90,7 +90,8 @@ contract BalanceFreezer is
         bytes32 txId
     ) external whenNotPaused onlyRole(FREEZER_ROLE) {
         _checkAndRegisterOperation(txId, OperationStatus.UpdateReplacementExecuted, account, amount);
-        (uint256 newBalance, uint256 oldBalance) = IERC20Freezable(_token).freeze(account, amount);
+        address token = _getBalanceFreezerStorage().token;
+        (uint256 newBalance, uint256 oldBalance) = IERC20Freezable(token).freeze(account, amount);
         emit FrozenBalanceUpdated(account, newBalance, oldBalance, txId);
     }
 
@@ -110,7 +111,8 @@ contract BalanceFreezer is
         bytes32 txId
     ) external whenNotPaused onlyRole(FREEZER_ROLE) {
         _checkAndRegisterOperation(txId, OperationStatus.UpdateIncreaseExecuted, account, amount);
-        (uint256 newBalance, uint256 oldBalance) = IERC20Freezable(_token).freezeIncrease(account, amount);
+        address token = _getBalanceFreezerStorage().token;
+        (uint256 newBalance, uint256 oldBalance) = IERC20Freezable(token).freezeIncrease(account, amount);
         emit FrozenBalanceUpdated(account, newBalance, oldBalance, txId);
     }
 
@@ -130,7 +132,8 @@ contract BalanceFreezer is
         bytes32 txId
     ) external whenNotPaused onlyRole(FREEZER_ROLE) {
         _checkAndRegisterOperation(txId, OperationStatus.UpdateDecreaseExecuted, account, amount);
-        (uint256 newBalance, uint256 oldBalance) = IERC20Freezable(_token).freezeDecrease(account, amount);
+        address token = _getBalanceFreezerStorage().token;
+        (uint256 newBalance, uint256 oldBalance) = IERC20Freezable(token).freezeDecrease(account, amount);
         emit FrozenBalanceUpdated(account, newBalance, oldBalance, txId);
     }
 
@@ -151,7 +154,8 @@ contract BalanceFreezer is
         bytes32 txId
     ) external whenNotPaused onlyRole(FREEZER_ROLE) {
         _checkAndRegisterOperation(txId, OperationStatus.TransferExecuted, from, amount);
-        (uint256 newBalance, uint256 oldBalance) = IERC20Freezable(_token).transferFrozen(from, to, amount);
+        address token = _getBalanceFreezerStorage().token;
+        (uint256 newBalance, uint256 oldBalance) = IERC20Freezable(token).transferFrozen(from, to, amount);
         emit FrozenBalanceTransfer(from, amount, txId, to);
         emit FrozenBalanceUpdated(from, newBalance, oldBalance, txId);
     }
@@ -162,21 +166,21 @@ contract BalanceFreezer is
      * @inheritdoc IBalanceFreezerPrimary
      */
     function getOperation(bytes32 txId) external view returns (Operation memory) {
-        return _operations[txId];
+        return _getBalanceFreezerStorage().operations[txId];
     }
 
     /**
      * @inheritdoc IBalanceFreezerPrimary
      */
     function balanceOfFrozen(address account) public view returns (uint256) {
-        return IERC20Freezable(_token).balanceOfFrozen(account);
+        return IERC20Freezable(_getBalanceFreezerStorage().token).balanceOfFrozen(account);
     }
 
     /**
      * @inheritdoc IBalanceFreezerPrimary
      */
     function underlyingToken() external view returns (address) {
-        return _token;
+        return _getBalanceFreezerStorage().token;
     }
 
     // ------------------ Pure functions -------------------------- //
@@ -204,7 +208,7 @@ contract BalanceFreezer is
             revert BalanceFreezer_AmountExcess(amount);
         }
 
-        Operation storage operation = _operations[txId];
+        Operation storage operation = _getBalanceFreezerStorage().operations[txId];
 
         if (operation.status != OperationStatus.Nonexistent) {
             revert BalanceFreezer_AlreadyExecuted(txId);
