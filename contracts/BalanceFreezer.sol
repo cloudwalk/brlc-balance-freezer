@@ -12,7 +12,7 @@ import { IBalanceFreezer } from "./interfaces/IBalanceFreezer.sol";
 import { IBalanceFreezerPrimary } from "./interfaces/IBalanceFreezer.sol";
 import { IERC20Freezable } from "./interfaces/IERC20Freezable.sol";
 
-import { BalanceFreezerStorageLayout } from "./BalanceFreezerStorage.sol";
+import { BalanceFreezerStorageLayout } from "./BalanceFreezerStorageLayout.sol";
 
 /**
  * @title BalanceFreezer contract
