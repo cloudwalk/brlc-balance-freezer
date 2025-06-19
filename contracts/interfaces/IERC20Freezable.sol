@@ -52,11 +52,11 @@ interface IERC20Freezable {
     /**
      * @dev Transfers frozen tokens on behalf of an account.
      *
-     * @param from The account tokens will be transferred from
-     * @param to The account tokens will be transferred to
-     * @param amount The amount of tokens to transfer
-     * @return newBalance The frozen balance of the `from` account after the transfer
-     * @return oldBalance The frozen balance of the `from` account before the transfer
+     * @param from The account tokens will be transferred from.
+     * @param to The account tokens will be transferred to.
+     * @param amount The amount of tokens to transfer.
+     * @return newBalance The frozen balance of the `from` account after the transfer.
+     * @return oldBalance The frozen balance of the `from` account before the transfer.
      */
     function transferFrozen(
         address from, // Tools: this comment prevents Prettier from formatting into a single line.
