@@ -610,7 +610,7 @@ describe("Contracts 'BalanceFreezer'", async () => {
         oldFrozenBalance,
         operation.txId
       );
-      expect(tx).to.be.emit(tokenMock, EVENT_NAME_MOCK_CALL_TRANSFER_FROZEN).withArgs(
+      await expect(tx).to.be.emit(tokenMock, EVENT_NAME_MOCK_CALL_TRANSFER_FROZEN).withArgs(
         operation.account, // from
         receiverAddress, // to
         operation.amount
