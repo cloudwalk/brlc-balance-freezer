@@ -40,6 +40,6 @@ interface IBalanceFreezerTypes {
         OperationStatus status;
         address account;
         uint64 amount;
-        // uint24 __reserved; // Reserved for future use until the end of the storage slot.
+        // uint24 __reserved; // Reserved until the end of the storage slot.
     }
 }
