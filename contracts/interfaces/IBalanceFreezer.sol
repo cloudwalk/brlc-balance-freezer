@@ -41,7 +41,7 @@ interface IBalanceFreezerPrimary is IBalanceFreezerTypes {
      * @param txId The off-chain identifier of the transaction that caused the transfer.
      */
     event FrozenBalanceTransfer(
-        address indexed from, // Tools: this comment prevents Prettier from formatting into a single line.
+        address indexed from, // Tools: prevent Prettier one-liner
         uint256 amount,
         bytes32 indexed txId,
         address indexed to
@@ -59,7 +59,7 @@ interface IBalanceFreezerPrimary is IBalanceFreezerTypes {
      * @param txId The off-chain identifier of the balance frozen updating operation.
      */
     function freeze(
-        address account, // Tools: this comment prevents Prettier from formatting into a single line.
+        address account, // Tools: prevent Prettier one-liner
         uint256 amount,
         bytes32 txId
     ) external;
@@ -74,7 +74,7 @@ interface IBalanceFreezerPrimary is IBalanceFreezerTypes {
      * @param txId The off-chain identifier of the balance frozen updating operation.
      */
     function freezeIncrease(
-        address account, // Tools: this comment prevents Prettier from formatting into a single line.
+        address account, // Tools: prevent Prettier one-liner
         uint256 amount,
         bytes32 txId
     ) external;
@@ -89,7 +89,7 @@ interface IBalanceFreezerPrimary is IBalanceFreezerTypes {
      * @param txId The off-chain identifier of the balance frozen updating operation.
      */
     function freezeDecrease(
-        address account, // Tools: this comment prevents Prettier from formatting into a single line.
+        address account, // Tools: prevent Prettier one-liner
         uint256 amount,
         bytes32 txId
     ) external;
@@ -107,7 +107,7 @@ interface IBalanceFreezerPrimary is IBalanceFreezerTypes {
      * @param txId The off-chain identifier of the transfer operation.
      */
     function transferFrozen(
-        address from, // Tools: this comment prevents Prettier from formatting into a single line.
+        address from, // Tools: prevent Prettier one-liner
         address to,
         uint256 amount,
         bytes32 txId

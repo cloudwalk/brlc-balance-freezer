@@ -85,7 +85,7 @@ contract BalanceFreezer is
      * - The requirements of the related token contract function must be met.
      */
     function freeze(
-        address account, // Tools: this comment prevents Prettier from formatting into a single line.
+        address account, // Tools: prevent Prettier one-liner
         uint256 amount,
         bytes32 txId
     ) external whenNotPaused onlyRole(FREEZER_ROLE) {
