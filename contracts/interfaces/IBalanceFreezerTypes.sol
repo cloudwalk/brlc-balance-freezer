@@ -30,7 +30,7 @@ interface IBalanceFreezerTypes {
     /**
      * @dev The data of a single freezing operation.
      *
-     * The fields:
+     * Fields:
      *
      * - status --- The status of the operation according to the {Status} enum.
      * - account -- The address of the account whose frozen balance was updated or transferred from.
