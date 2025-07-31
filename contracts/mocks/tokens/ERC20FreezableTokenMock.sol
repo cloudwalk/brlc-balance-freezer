@@ -20,25 +20,25 @@ contract ERC20FreezableTokenMock is ERC20, IERC20Freezable {
 
     /// @dev A mock event with the parameters that were passed to the `freeze()` function.
     event MockCallFreeze(
-        address account, // Tools: this comment prevents Prettier from formatting into a single line.
+        address account, // Tools: prevent Prettier one-liner
         uint256 amount
     );
 
     /// @dev A mock event with the parameters that were passed to the `freezeIncrease()` function.
     event MockCallFreezeIncrease(
-        address account, // Tools: this comment prevents Prettier from formatting into a single line.
+        address account, // Tools: prevent Prettier one-liner
         uint256 amount
     );
 
     /// @dev A mock event with the parameters that were passed to the `freezeIncrease()` function.
     event MockCallFreezeDecrease(
-        address account, // Tools: this comment prevents Prettier from formatting into a single line.
+        address account, // Tools: prevent Prettier one-liner
         uint256 amount
     );
 
     /// @dev A mock event with the parameters that were passed to the `transferFrozen()` function.
     event MockCallTransferFrozen(
-        address from, // Tools: this comment prevents Prettier from formatting into a single line.
+        address from, // Tools: prevent Prettier one-liner
         address to,
         uint256 amount
     );
@@ -73,7 +73,7 @@ contract ERC20FreezableTokenMock is ERC20, IERC20Freezable {
      * @return oldBalance The frozen balance of the account before the update.
      */
     function freeze(
-        address account, // Tools: this comment prevents Prettier from formatting into a single line.
+        address account, // Tools: prevent Prettier one-liner
         uint256 amount
     ) external returns (uint256 newBalance, uint256 oldBalance) {
         emit MockCallFreeze(account, amount);
@@ -107,7 +107,7 @@ contract ERC20FreezableTokenMock is ERC20, IERC20Freezable {
      * @return oldBalance The frozen balance of the account before the decrease.
      */
     function freezeDecrease(
-        address account, // Tools: this comment prevents Prettier from formatting into a single line.
+        address account, // Tools: prevent Prettier one-liner
         uint256 amount
     ) external returns (uint256 newBalance, uint256 oldBalance) {
         emit MockCallFreezeDecrease(account, amount);
@@ -124,7 +124,7 @@ contract ERC20FreezableTokenMock is ERC20, IERC20Freezable {
      * @return oldBalance The frozen balance of the `from` account before the transfer.
      */
     function transferFrozen(
-        address from, // Tools: this comment prevents Prettier from formatting into a single line.
+        address from, // Tools: prevent Prettier one-liner
         address to,
         uint256 amount
     ) external returns (uint256 newBalance, uint256 oldBalance) {

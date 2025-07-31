@@ -19,7 +19,7 @@ interface IERC20Freezable {
      * @return oldBalance The frozen balance of the account before the update.
      */
     function freeze(
-        address account, // Tools: this comment prevents Prettier from formatting into a single line.
+        address account, // Tools: prevent Prettier one-liner
         uint256 amount
     ) external returns (uint256 newBalance, uint256 oldBalance);
 
@@ -45,7 +45,7 @@ interface IERC20Freezable {
      * @return oldBalance The frozen balance of the account before the decrease.
      */
     function freezeDecrease(
-        address account, // Tools: this comment prevents Prettier from formatting into a single line.
+        address account, // Tools: prevent Prettier one-liner
         uint256 amount
     ) external returns (uint256 newBalance, uint256 oldBalance);
 
@@ -59,7 +59,7 @@ interface IERC20Freezable {
      * @return oldBalance The frozen balance of the `from` account before the transfer.
      */
     function transferFrozen(
-        address from, // Tools: this comment prevents Prettier from formatting into a single line.
+        address from, // Tools: prevent Prettier one-liner
         address to,
         uint256 amount
     ) external returns (uint256 newBalance, uint256 oldBalance);

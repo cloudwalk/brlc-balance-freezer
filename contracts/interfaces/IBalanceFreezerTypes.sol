@@ -30,7 +30,7 @@ interface IBalanceFreezerTypes {
     /**
      * @dev The data of a single freezing operation.
      *
-     * The fields:
+     * Fields:
      *
      * - status --- The status of the operation according to the {Status} enum.
      * - account -- The address of the account whose frozen balance was updated or transferred from.
@@ -40,6 +40,6 @@ interface IBalanceFreezerTypes {
         OperationStatus status;
         address account;
         uint64 amount;
-        // uint24 __reserved; // Reserved for future use until the end of the storage slot.
+        // uint24 __reserved; // Reserved until the end of the storage slot.
     }
 }

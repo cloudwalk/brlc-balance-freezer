@@ -24,7 +24,7 @@ abstract contract BalanceFreezerStorageLayout is IBalanceFreezerTypes {
     /**
      * @dev Defines the contract storage structure.
      *
-     * The fields:
+     * Fields:
      *
      * - token ------- The address of the underlying token.
      * - operations -- The mapping of an operation structure for a given off-chain transaction identifier.
