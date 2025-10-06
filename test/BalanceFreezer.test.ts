@@ -12,7 +12,7 @@ enum OperationStatus {
   TransferExecuted = 1,
   UpdateIncreaseExecuted = 2,
   UpdateDecreaseExecuted = 3,
-  UpdateReplacementExecuted = 4
+  UpdateReplacementExecuted = 4,
 }
 
 interface Version {
@@ -39,7 +39,7 @@ interface TestOperation extends Operation {
 const defaultOperation: Operation = {
   status: OperationStatus.Nonexistent,
   account: ADDRESS_ZERO,
-  amount: 0n
+  amount: 0n,
 };
 
 interface Fixture {
@@ -53,7 +53,7 @@ describe("Contracts 'BalanceFreezer'", async () => {
     ethers.encodeBytes32String("MOCK TX_ID 2"),
     ethers.encodeBytes32String("MOCK TX_ID 3"),
     ethers.encodeBytes32String("MOCK TX_ID 4"),
-    ethers.encodeBytes32String("MOCK TX_ID 5")
+    ethers.encodeBytes32String("MOCK TX_ID 5"),
   ];
   const TX_ID_ZERO = ethers.ZeroHash;
   const TOKEN_AMOUNT = 12345678;
@@ -62,7 +62,7 @@ describe("Contracts 'BalanceFreezer'", async () => {
     TOKEN_AMOUNT * 2,
     TOKEN_AMOUNT * 3,
     TOKEN_AMOUNT * 4,
-    TOKEN_AMOUNT * 5
+    TOKEN_AMOUNT * 5,
   ];
 
   // Events of the contracts under test
@@ -88,7 +88,7 @@ describe("Contracts 'BalanceFreezer'", async () => {
   const EXPECTED_VERSION: Version = {
     major: 1,
     minor: 3,
-    patch: 0
+    patch: 0,
   };
 
   let freezerContractFactory: ContractFactory;
@@ -136,7 +136,7 @@ describe("Contracts 'BalanceFreezer'", async () => {
 
     return {
       freezerContract,
-      tokenMock
+      tokenMock,
     };
   }
 
@@ -150,7 +150,7 @@ describe("Contracts 'BalanceFreezer'", async () => {
     return fixture;
   }
 
-  function defineTestOperations(num: number = 1): TestOperation[] {
+  function defineTestOperations(num = 1): TestOperation[] {
     const operations: TestOperation[] = [];
     const maxNum = Math.min(TX_ID_ARRAY.length, TOKEN_AMOUNTS.length, users.length);
     if (num > maxNum) {
@@ -161,7 +161,7 @@ describe("Contracts 'BalanceFreezer'", async () => {
         txId: TX_ID_ARRAY[i],
         account: users[i].address,
         amount: BigInt(TOKEN_AMOUNTS[i]),
-        status: OperationStatus.Nonexistent
+        status: OperationStatus.Nonexistent,
       });
     }
     return operations;
@@ -174,13 +174,13 @@ describe("Contracts 'BalanceFreezer'", async () => {
 
   async function checkOperationStructureOnBlockchain(
     freezerContract: Contract,
-    operation: TestOperation
+    operation: TestOperation,
   ) {
     const actualOperation: Record<string, unknown> = await freezerContract.getOperation(operation.txId);
     const expectedOperation: Operation = {
       status: operation.status,
       account: operation.account,
-      amount: operation.amount
+      amount: operation.amount,
     };
     checkEquality(actualOperation, expectedOperation);
   }
@@ -290,17 +290,17 @@ describe("Contracts 'BalanceFreezer'", async () => {
       const tx = connect(freezerContract, freezer).freeze(
         operation.account,
         operation.amount,
-        operation.txId
+        operation.txId,
       );
       await expect(tx).to.be.emit(freezerContract, EVENT_NAME_FROZEN_BALANCE_UPDATED).withArgs(
         operation.account,
         newFrozenBalance,
         oldFrozenBalance,
-        operation.txId
+        operation.txId,
       );
       await expect(tx).to.be.emit(tokenMock, EVENT_NAME_MOCK_CALL_FREEZE).withArgs(
         operation.account,
-        operation.amount
+        operation.amount,
       );
 
       operation.status = OperationStatus.UpdateReplacementExecuted;
@@ -380,17 +380,17 @@ describe("Contracts 'BalanceFreezer'", async () => {
       const tx = connect(freezerContract, freezer).freezeIncrease(
         operation.account,
         operation.amount,
-        operation.txId
+        operation.txId,
       );
       await expect(tx).to.be.emit(freezerContract, EVENT_NAME_FROZEN_BALANCE_UPDATED).withArgs(
         operation.account,
         newFrozenBalance,
         oldFrozenBalance,
-        operation.txId
+        operation.txId,
       );
       await expect(tx).to.be.emit(tokenMock, EVENT_NAME_MOCK_CALL_FREEZE_INCREASE).withArgs(
         operation.account,
-        operation.amount
+        operation.amount,
       );
 
       operation.status = OperationStatus.UpdateIncreaseExecuted;
@@ -415,7 +415,7 @@ describe("Contracts 'BalanceFreezer'", async () => {
       const [operation] = defineTestOperations();
       await pauseContract(freezerContract);
       await expect(
-        connect(freezerContract, freezer).freezeIncrease(operation.account, operation.amount, operation.txId)
+        connect(freezerContract, freezer).freezeIncrease(operation.account, operation.amount, operation.txId),
       ).to.be.revertedWithCustomError(freezerContract, ERROR_NAME_ENFORCED_PAUSE);
     });
 
@@ -424,17 +424,17 @@ describe("Contracts 'BalanceFreezer'", async () => {
       const [operation] = defineTestOperations();
 
       await expect(
-        connect(freezerContract, user).freezeIncrease(operation.account, operation.amount, operation.txId)
+        connect(freezerContract, user).freezeIncrease(operation.account, operation.amount, operation.txId),
       ).to.be.revertedWithCustomError(
         freezerContract,
-        ERROR_NAME_ACCESS_CONTROL_UNAUTHORIZED_ACCOUNT
+        ERROR_NAME_ACCESS_CONTROL_UNAUTHORIZED_ACCOUNT,
       ).withArgs(user.address, FREEZER_ROLE);
 
       await expect(
-        connect(freezerContract, deployer).freezeIncrease(operation.account, operation.amount, operation.txId)
+        connect(freezerContract, deployer).freezeIncrease(operation.account, operation.amount, operation.txId),
       ).to.be.revertedWithCustomError(
         freezerContract,
-        ERROR_NAME_ACCESS_CONTROL_UNAUTHORIZED_ACCOUNT
+        ERROR_NAME_ACCESS_CONTROL_UNAUTHORIZED_ACCOUNT,
       ).withArgs(deployer.address, FREEZER_ROLE);
     });
 
@@ -443,7 +443,7 @@ describe("Contracts 'BalanceFreezer'", async () => {
       const [operation] = defineTestOperations();
       operation.txId = TX_ID_ZERO;
       await expect(
-        connect(freezerContract, freezer).freezeIncrease(operation.account, operation.amount, operation.txId)
+        connect(freezerContract, freezer).freezeIncrease(operation.account, operation.amount, operation.txId),
       ).to.be.revertedWithCustomError(freezerContract, ERROR_NAME_TX_ID_ZERO);
     });
 
@@ -452,10 +452,10 @@ describe("Contracts 'BalanceFreezer'", async () => {
       const [operation] = defineTestOperations();
       operation.amount = maxUintForBits(64) + 1n;
       await expect(
-        connect(freezerContract, freezer).freezeIncrease(operation.account, operation.amount, operation.txId)
+        connect(freezerContract, freezer).freezeIncrease(operation.account, operation.amount, operation.txId),
       ).to.be.revertedWithCustomError(
         freezerContract,
-        ERROR_NAME_AMOUNT_EXCESS
+        ERROR_NAME_AMOUNT_EXCESS,
       ).withArgs(operation.amount);
     });
 
@@ -464,10 +464,10 @@ describe("Contracts 'BalanceFreezer'", async () => {
       const [operation] = defineTestOperations();
       await proveTx(connect(freezerContract, freezer).freeze(operation.account, operation.amount, operation.txId));
       await expect(
-        connect(freezerContract, freezer).freezeIncrease(operation.account, operation.amount, operation.txId)
+        connect(freezerContract, freezer).freezeIncrease(operation.account, operation.amount, operation.txId),
       ).to.be.revertedWithCustomError(
         freezerContract,
-        ERROR_NAME_ALREADY_EXECUTED
+        ERROR_NAME_ALREADY_EXECUTED,
       ).withArgs(operation.txId);
     });
   });
@@ -484,17 +484,17 @@ describe("Contracts 'BalanceFreezer'", async () => {
       const tx = connect(freezerContract, freezer).freezeDecrease(
         operation.account,
         operation.amount,
-        operation.txId
+        operation.txId,
       );
       await expect(tx).to.be.emit(freezerContract, EVENT_NAME_FROZEN_BALANCE_UPDATED).withArgs(
         operation.account,
         newFrozenBalance,
         oldFrozenBalance,
-        operation.txId
+        operation.txId,
       );
       await expect(tx).to.be.emit(tokenMock, EVENT_NAME_MOCK_CALL_FREEZE_DECREASE).withArgs(
         operation.account,
-        operation.amount
+        operation.amount,
       );
 
       operation.status = OperationStatus.UpdateDecreaseExecuted;
@@ -522,7 +522,7 @@ describe("Contracts 'BalanceFreezer'", async () => {
       const [operation] = defineTestOperations();
       await pauseContract(freezerContract);
       await expect(
-        connect(freezerContract, freezer).freezeDecrease(operation.account, operation.amount, operation.txId)
+        connect(freezerContract, freezer).freezeDecrease(operation.account, operation.amount, operation.txId),
       ).to.be.revertedWithCustomError(freezerContract, ERROR_NAME_ENFORCED_PAUSE);
     });
 
@@ -531,17 +531,17 @@ describe("Contracts 'BalanceFreezer'", async () => {
       const [operation] = defineTestOperations();
 
       await expect(
-        connect(freezerContract, user).freezeDecrease(operation.account, operation.amount, operation.txId)
+        connect(freezerContract, user).freezeDecrease(operation.account, operation.amount, operation.txId),
       ).to.be.revertedWithCustomError(
         freezerContract,
-        ERROR_NAME_ACCESS_CONTROL_UNAUTHORIZED_ACCOUNT
+        ERROR_NAME_ACCESS_CONTROL_UNAUTHORIZED_ACCOUNT,
       ).withArgs(user.address, FREEZER_ROLE);
 
       await expect(
-        connect(freezerContract, deployer).freezeDecrease(operation.account, operation.amount, operation.txId)
+        connect(freezerContract, deployer).freezeDecrease(operation.account, operation.amount, operation.txId),
       ).to.be.revertedWithCustomError(
         freezerContract,
-        ERROR_NAME_ACCESS_CONTROL_UNAUTHORIZED_ACCOUNT
+        ERROR_NAME_ACCESS_CONTROL_UNAUTHORIZED_ACCOUNT,
       ).withArgs(deployer.address, FREEZER_ROLE);
     });
 
@@ -550,7 +550,7 @@ describe("Contracts 'BalanceFreezer'", async () => {
       const [operation] = defineTestOperations();
       operation.txId = TX_ID_ZERO;
       await expect(
-        connect(freezerContract, freezer).freezeDecrease(operation.account, operation.amount, operation.txId)
+        connect(freezerContract, freezer).freezeDecrease(operation.account, operation.amount, operation.txId),
       ).to.be.revertedWithCustomError(freezerContract, ERROR_NAME_TX_ID_ZERO);
     });
 
@@ -559,10 +559,10 @@ describe("Contracts 'BalanceFreezer'", async () => {
       const [operation] = defineTestOperations();
       operation.amount = maxUintForBits(64) + 1n;
       await expect(
-        connect(freezerContract, freezer).freezeDecrease(operation.account, operation.amount, operation.txId)
+        connect(freezerContract, freezer).freezeDecrease(operation.account, operation.amount, operation.txId),
       ).to.be.revertedWithCustomError(
         freezerContract,
-        ERROR_NAME_AMOUNT_EXCESS
+        ERROR_NAME_AMOUNT_EXCESS,
       ).withArgs(operation.amount);
     });
 
@@ -571,10 +571,10 @@ describe("Contracts 'BalanceFreezer'", async () => {
       const [operation] = defineTestOperations();
       await proveTx(connect(freezerContract, freezer).freeze(operation.account, operation.amount, operation.txId));
       await expect(
-        connect(freezerContract, freezer).freezeDecrease(operation.account, operation.amount, operation.txId)
+        connect(freezerContract, freezer).freezeDecrease(operation.account, operation.amount, operation.txId),
       ).to.be.revertedWithCustomError(
         freezerContract,
-        ERROR_NAME_ALREADY_EXECUTED
+        ERROR_NAME_ALREADY_EXECUTED,
       ).withArgs(operation.txId);
     });
   });
@@ -583,7 +583,7 @@ describe("Contracts 'BalanceFreezer'", async () => {
     async function executeAndCheckTransferring(
       fixture: Fixture,
       operation: TestOperation,
-      receiverAddress: string
+      receiverAddress: string,
     ) {
       const { freezerContract, tokenMock } = fixture;
       const oldFrozenBalance = await tokenMock.OLD_FROZEN_BALANCE_MOCK();
@@ -596,24 +596,24 @@ describe("Contracts 'BalanceFreezer'", async () => {
         operation.account, // from
         receiverAddress, // to
         operation.amount,
-        operation.txId
+        operation.txId,
       );
       await expect(tx).to.be.emit(freezerContract, EVENT_NAME_FROZEN_BALANCE_TRANSFER).withArgs(
         operation.account,
         operation.amount,
         operation.txId,
-        receiverAddress
+        receiverAddress,
       );
       await expect(tx).to.be.emit(freezerContract, EVENT_NAME_FROZEN_BALANCE_UPDATED).withArgs(
         operation.account,
         newFrozenBalance,
         oldFrozenBalance,
-        operation.txId
+        operation.txId,
       );
       await expect(tx).to.be.emit(tokenMock, EVENT_NAME_MOCK_CALL_TRANSFER_FROZEN).withArgs(
         operation.account, // from
         receiverAddress, // to
-        operation.amount
+        operation.amount,
       );
 
       operation.status = OperationStatus.TransferExecuted;
@@ -647,7 +647,7 @@ describe("Contracts 'BalanceFreezer'", async () => {
         operation.account, // from
         receiver.address, // to
         operation.amount,
-        operation.txId
+        operation.txId,
       )).to.be.revertedWithCustomError(freezerContract, ERROR_NAME_ENFORCED_PAUSE);
     });
 
@@ -659,20 +659,20 @@ describe("Contracts 'BalanceFreezer'", async () => {
         operation.account, // from
         receiver.address, // to
         operation.amount,
-        operation.txId
+        operation.txId,
       )).to.be.revertedWithCustomError(
         freezerContract,
-        ERROR_NAME_ACCESS_CONTROL_UNAUTHORIZED_ACCOUNT
+        ERROR_NAME_ACCESS_CONTROL_UNAUTHORIZED_ACCOUNT,
       ).withArgs(user.address, FREEZER_ROLE);
 
       await expect(connect(freezerContract, deployer).transferFrozen(
         operation.account, // from
         receiver.address, // to
         operation.amount,
-        operation.txId
+        operation.txId,
       )).to.be.revertedWithCustomError(
         freezerContract,
-        ERROR_NAME_ACCESS_CONTROL_UNAUTHORIZED_ACCOUNT
+        ERROR_NAME_ACCESS_CONTROL_UNAUTHORIZED_ACCOUNT,
       ).withArgs(deployer.address, FREEZER_ROLE);
     });
 
@@ -684,7 +684,7 @@ describe("Contracts 'BalanceFreezer'", async () => {
         operation.account, // from
         receiver.address, // to
         operation.amount,
-        operation.txId
+        operation.txId,
       )).to.be.revertedWithCustomError(freezerContract, ERROR_NAME_TX_ID_ZERO);
     });
 
@@ -696,10 +696,10 @@ describe("Contracts 'BalanceFreezer'", async () => {
         operation.account, // from
         receiver.address, // to
         operation.amount,
-        operation.txId
+        operation.txId,
       )).to.be.revertedWithCustomError(
         freezerContract,
-        ERROR_NAME_AMOUNT_EXCESS
+        ERROR_NAME_AMOUNT_EXCESS,
       ).withArgs(operation.amount);
     });
 
@@ -711,10 +711,10 @@ describe("Contracts 'BalanceFreezer'", async () => {
         operation.account, // from
         receiver.address, // to
         operation.amount,
-        operation.txId
+        operation.txId,
       )).to.be.revertedWithCustomError(
         freezerContract,
-        ERROR_NAME_ALREADY_EXECUTED
+        ERROR_NAME_ALREADY_EXECUTED,
       ).withArgs(operation.txId);
     });
   });
