@@ -6,12 +6,12 @@ import "hardhat-gas-reporter";
 import dotenv from "dotenv";
 
 dotenv.config();
-const DEFAULT_MNEMONIC = "test test test test test test test test test test test junk";
 
 function mnemonicOrDefault(mnemonic: string | undefined) {
-  return {
-    mnemonic: mnemonic ?? DEFAULT_MNEMONIC,
-  };
+  if (!mnemonic) {
+    throw new Error("Mnemonic environment variable must be set and cannot use default values");
+  }
+  return { mnemonic };
 }
 
 function pkOrEmpty(pk: string | undefined) {
